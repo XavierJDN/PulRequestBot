@@ -1,5 +1,5 @@
-name: learn-github-pull-request
-run-name: ${{ github.actor }} Learn GitHub Pull Request
+name: learn-github-issue
+run-name: ${{ github.actor }} Learn GitHub Issue
 on:
   pr_comment:
     types: [created]
@@ -11,14 +11,13 @@ jobs:
       - name: Welcome contributor
         uses: actions/github-script@v3
         permissions:
-          pull-requests: read, write
+          issue-requests: read, write
         with:
-          # add a secret to your repository named `BOT_TOKEN` with a GitHub token
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Thanks for opening this pull request, I glad to here what you wants!`
+              body: `Thanks for opening this issue, I glad to here what you wants!`
             })
