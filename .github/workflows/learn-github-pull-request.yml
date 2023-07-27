@@ -1,8 +1,10 @@
 name: learn-github-issue
 run-name: ${{ github.actor }} Learn GitHub Issue
 on:
-  issue_comment:
-    types: [created]
+  # Trigger when an issue is created
+
+  issues:
+    types: [opened]
 jobs:
   welcome:
     name: Welcome contributor
