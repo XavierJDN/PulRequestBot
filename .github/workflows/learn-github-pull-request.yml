@@ -1,7 +1,7 @@
 name: learn-github-issue
 run-name: ${{ github.actor }} Learn GitHub Issue
 on:
-  pr_comment:
+  issue_comment:
     types: [created]
 jobs:
   welcome:
