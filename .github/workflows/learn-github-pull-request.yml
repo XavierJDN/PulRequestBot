@@ -7,13 +7,12 @@ jobs:
   welcome:
     name: Welcome contributor
     runs-on: ubuntu
+    permissions:
+      issues: write
     steps:
       - name: Welcome contributor
-        uses: actions/github-script@v3
-        permissions:
-          issue-requests: read, write
+        uses: actions/github-script@v4
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.issues.createComment({
               issue_number: context.issue.number,
