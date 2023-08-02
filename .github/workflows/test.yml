@@ -15,6 +15,7 @@ jobs:
           script: |
             const regex = /^https:\/\/github\.com\/savoirfairelinux\/jami-plugins-store-requests\/files\/.*/;
             const comment = "${{ github.event.comment.body }}";
+            debugger;
             return comment.match(regex);
       - name: ask to upload the CSR file
         if: steps.verify_attached_csr.outputs.length == 0
