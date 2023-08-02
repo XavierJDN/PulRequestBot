@@ -13,7 +13,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const regex = new RegExp(/^https:\/\/github\.com\/savoirfairelinux\/jami-plugins-store-requests\/files\/.*/);
+            const regex = /^https:\/\/github\.com\/savoirfairelinux\/jami-plugins-store-requests\/files\/.*/;
             const comment = "${{ github.event.comment.body }}";
             return comment.match(regex);
       - name: ask to upload the CSR file
