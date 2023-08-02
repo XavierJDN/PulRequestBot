@@ -18,7 +18,7 @@ jobs:
             const attachements = comment.body.match(regex);
             return { attachements };
       - name: ask to upload the CSR file
-        if: steps.verify_attached_csr.outputs.length == 0
+        if: steps.verify_attached_csr.outputs.attachements.length == 0
         uses: actions/github-script@v6
         with:
           script: |
@@ -30,7 +30,7 @@ jobs:
               body: "Please upload the CSR file"
             })
       - name: add label to process the request
-        if: steps.verify_attached_csr.outputs.result.length == 1
+        if: steps.verify_attached_csr.outputs.attachements.length == 1
         uses: actions/github-script@v6
         with:
           script: |
@@ -48,7 +48,7 @@ jobs:
             })
       - name: request verify the csr
         id: request-verify-csr
-        if: steps.verify_attached_csr.outputs.result.length == 1
+        if: steps.verify_attached_csr.outputs.attachements.length == 1
         uses: actions/github-script@v6
         with:
           script: curl -s ${{ steps.verify_attached_csr.outputs.result[0] }} | tar -xz -O csr.pem | openssl req -noout -text
@@ -69,7 +69,7 @@ jobs:
               labels: ['invalid csr']
             })
       - name: handle success when requesting verify the csr
-        if: endsWith(steps.request-verify-csr.outputs, 'OK') && steps.verify_attached_csr.outputs.result.length == 1
+        if: endsWith(steps.request-verify-csr.outputs, 'OK') && steps.verify_attached_csr.outputs.attachements.length == 1
         run: |
           github.rest.issues.createComment({
             issue_number: context.issue.number,
@@ -90,7 +90,7 @@ jobs:
             labels: 'invalid csr'
           })
       - name: remove label to process the request
-        if: steps.verify_attached_csr.outputs.result.length == 1
+        if: steps.verify_attached_csr.outputs.attachements.length == 1
         run: |
           github.rest.issues.removeLabel({
               issue_number: context.issue.number,
