@@ -24,9 +24,9 @@ jobs:
           script: |
             console.log(${{ toJSON(github.event.issue) }});
             github.rest.issues.createComment({
-              issue_number: github.event.issue.number,
-              owner: github.repository_owner,
-              repo: github.repository,
+              issue_number: parseInt("${{ github.event.issue.number }}"),
+              owner: "${{ github.repository_owner }}",
+              repo: "${{ github.repository }}",
               body: 'Please upload the CSR file'
             })
             exit 1
