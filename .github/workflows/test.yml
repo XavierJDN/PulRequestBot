@@ -13,12 +13,9 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const context = ${{ toJson(github.context) }};
-            const event = ${{ toJson(github.event) }}; 
-            console.log(context);
-            console.log(event);
             const regex = new RegExp(/^https:\/\/github\.com\/savoirfairelinux\/jami-plugins-store-requests\/files\/.*/);
-            const comment = '${{ github.context.payload.comment.body }}'
+            const comment = '${{ github.event.comment.body }}';
+            console.log(comment);
             return comment.match(regex);
       - name: ask to upload the CSR file
         if: steps.verify_attached_csr.outputs.result.length == 0
