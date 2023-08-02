@@ -13,6 +13,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            console.log(github.event);
             const regex = new RegExp(/^https:\/\/github\.com\/savoirfairelinux\/jami-plugins-store-requests\/files\/.*/);
             const comment = '${{ github.context.payload.comment.body }}'
             return comment.match(regex);
