@@ -27,9 +27,8 @@ jobs:
               issue_number: parseInt("${{ github.event.issue.number }}"),
               owner: "${{ github.repository_owner }}",
               repo: "${{ github.repository }}",
-              body: 'Please upload the CSR file'
+              body: "Please upload the CSR file"
             })
-            exit 1
       - name: add label to process the request
         if: steps.verify_attached_csr.outputs.result.length == 1
         uses: actions/github-script@v6
