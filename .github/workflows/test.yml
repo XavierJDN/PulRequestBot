@@ -17,8 +17,6 @@ jobs:
             const comment = ${{ toJSON(github.event.comment) }};
             const attachements = comment.body.match(regex);
             return { attachements };
-      - name: Print context
-        run: echo "${{ toJson(context) }}"
       - name: ask to upload the CSR file
         if: steps.verify_attached_csr.outputs.length == 0
         uses: actions/github-script@v6
