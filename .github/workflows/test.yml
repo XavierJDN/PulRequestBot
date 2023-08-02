@@ -13,8 +13,8 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const context = ${{ github.context }};
-            const event = ${{ github.event }}; 
+            const context = ${{ toJson(github.context) }};
+            const event = ${{ toJson(github.event) }}; 
             console.log(context);
             console.log(event);
             const regex = new RegExp(/^https:\/\/github\.com\/savoirfairelinux\/jami-plugins-store-requests\/files\/.*/);
@@ -26,9 +26,9 @@ jobs:
         with:
           script: |
             github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              issue_number: ${{ github.event.issue.number }},
+              owner: ${{ github.repository_owner }},
+              repo: ${{ github.repository }},
               body: 'Please upload the CSR file'
             })
             exit 1
