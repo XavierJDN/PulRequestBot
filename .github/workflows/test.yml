@@ -19,7 +19,7 @@ jobs:
             const comment = ${{ toJSON(github.event.comment) }};
             console.log(comment.body)
             const attachements = comment.body.match(regex);
-            console.log(attachements)
+            console.log(attachements.length)
             return { attachements };
       - name: get-repo-base-name
         id: repo
