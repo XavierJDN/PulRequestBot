@@ -26,6 +26,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            console.log(github.context.payload.steps[" verify_attached_csr"].outputs["attachements"].length)
             const repo = "${{ github.repository }}"
             baseName = repo.split("/").at(-1);
             return { baseName };
