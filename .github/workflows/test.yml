@@ -17,7 +17,9 @@ jobs:
           script: |
             const regex = /^https:\/\/github\.com\/.*\/files\/.*/;
             const comment = ${{ toJSON(github.event.comment) }};
+            console.log(comment.body)
             const attachements = comment.body.match(regex);
+            console.log(attachements)
             return { attachements };
       - name: get-repo-base-name
         id: repo
