@@ -24,7 +24,7 @@ jobs:
           script: |
             console.log("${{ github.repository }}");
             const repo = "${{ github.repository }}";
-            console.log(repo.split('/'));
+            console.log(repo.split('/')[-1]);
             github.rest.issues.createComment({
               issue_number: parseInt("${{ github.event.issue.number }}"),
               owner: "${{ github.repository_owner }}",
