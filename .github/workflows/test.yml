@@ -19,17 +19,17 @@ jobs:
             const comment = ${{ toJSON(github.event.comment) }};
             console.log(comment.body)
             const attachements = comment.body.match(regex);
-            console.log(attachements.length)
             return { attachements };
       - name: get-repo-base-name
         id: repo
         uses: actions/github-script@v6
         with:
           script: |
-            console.log(github.context.payload.steps[" verify_attached_csr"].outputs["attachements"].length)
             const repo = "${{ github.repository }}"
             baseName = repo.split("/").at(-1);
             return { baseName };
+      - name: test-attachements
+        run: echo ${{ steps.verify_attached_csr.outputs }} 
       - name: ask to upload the CSR file
         if: steps.verify_attached_csr.outputs.attachements.length == 0
         uses: actions-ecosystem/action-create-comment@v1
