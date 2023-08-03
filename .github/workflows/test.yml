@@ -19,19 +19,11 @@ jobs:
             return { attachements };
       - name: ask to upload the CSR file
         if: steps.verify_attached_csr.outputs.attachements.length == 0
-        uses: actions/github-script@v6
+        uses: actions-ecosystem/action-create-comment@v1
         with:
-          script: |
-            console.log("${{ github.repository }}");
-            const repo = "${{ github.repository }}";
-            const baseName = repo.split('/').at(-1);
-            console.log(baseName);
-            github.rest.issues.createComment({
-              issue_number: parseInt("${{ github.event.issue.number }}"),
-              owner: "${{ github.repository_owner }}",
-              repo: baseName,
-              body: "Please upload the CSR file"
-            })
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            @${{ github.actor }} Please upload your CSR file to your comment.
       - name: add label to process the request
         if: steps.verify_attached_csr.outputs.attachements.length == 1
         uses: actions/github-script@v6
