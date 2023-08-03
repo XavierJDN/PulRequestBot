@@ -5,6 +5,8 @@ on:
     types: [created, edited]
 jobs:
   verify-csr:
+    permissions:
+      issues: write
     if: contains(github.event.issue.labels.*.name, 'new organization request') && startsWith(github.event.comment.body, '/csr')
     runs-on:  ubuntu-latest
     steps:
