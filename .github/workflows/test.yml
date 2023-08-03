@@ -22,7 +22,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            console.log(${{ toJSON(github.event.issue) }});
+            console.log("${{ github.repository_owner }}");
             github.rest.issues.createComment({
               issue_number: parseInt("${{ github.event.issue.number }}"),
               owner: "${{ github.repository_owner }}",
