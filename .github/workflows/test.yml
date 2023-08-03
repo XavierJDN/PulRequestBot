@@ -19,6 +19,14 @@ jobs:
             const comment = ${{ toJSON(github.event.comment) }};
             const attachements = comment.body.match(regex);
             return { attachements };
+      - name: get-repo-base-name
+        id: repo
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const repo = "${{ github.repository }}"
+            baseName = repo.split("/").at(-1);
+            return { baseName };
       - name: ask to upload the CSR file
         if: steps.verify_attached_csr.outputs.attachements.length == 0
         uses: actions-ecosystem/action-create-comment@v1
@@ -26,21 +34,23 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           body: |
             @${{ github.actor }} Please upload your CSR file to your comment.
+      - name: comment-verification-in-progress
+        if: steps.verify_attached_csr.outputs.attachements.length == 1
+        uses: actions-ecosystem/action-create-comment@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            CSR file uploaded, verification in progress
       - name: add label to process the request
         if: steps.verify_attached_csr.outputs.attachements.length == 1
         uses: actions/github-script@v6
         with:
           script: |
-            github.rest.issues.createComment({
-              issue_number: github.event.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'CSR file uploaded, verification in progress'
-            })
+            console.log(${{ steps.repo }});
             github.rest.issues.addLabels({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              issue_number: parseInt("${{ github.event.issue.number }}"),
+              owner: "${{ github.repository_owner}}",
+              repo: "${{ steps.repo.outputs.baseName }}",
               labels: ['csr verification in progress']
             })
       - name: request verify the csr
