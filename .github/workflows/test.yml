@@ -61,7 +61,7 @@ jobs:
         with:
           script: curl -s ${{ steps.verify_attached_csr.outputs.result[0] }} | tar -xz -O csr.pem | openssl req -noout -text
       - name: handle error
-        if: steps.verify_attached_csr.outputs.result.length == 1 && contains(steps.request-verify-csr.outputs.result[0], 'OK') == false
+        if: steps.verify_attached_csr.outputs.result.length == 1 && contains(steps.request-verify-csr.outputs.result, 'OK') == false
         id: request-verify-csr-error
         run: |
             github.rest.issues.createComment({
@@ -77,7 +77,7 @@ jobs:
               labels: ['invalid csr']
             })
       - name: handle success when requesting verify the csr
-        if: endsWith(steps.request-verify-csr..result.outputs, 'OK') && steps.verify_attached_csr.outputs.result.attachements.length == 1
+        if: endsWith(steps.request-verify-csr.outputs.result, 'OK') && steps.verify_attached_csr.outputs.result.attachements.length == 1
         run: |
           github.rest.issues.createComment({
             issue_number: context.issue.number,
