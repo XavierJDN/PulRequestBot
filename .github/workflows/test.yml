@@ -33,7 +33,7 @@ jobs:
     needs: [set-up]
     steps:
       - name: print
-        run: echo "${{ toJSON(needs.set-up.outputs.attachements) }}"
+        run: echo ${{ toJSON(needs.set-up.outputs.attachements)[0] }}
   handle-bad-csr:
     runs-on:  ubuntu-latest
     permissions:
