@@ -98,31 +98,32 @@ jobs:
       - name: handle success when requesting verify the csr
         if: endsWith(steps.request-verify-csr.outputs.csr_verification, 'OK')
         uses: actions/github-script@v6
-        run: |
-          github.rest.issues.createComment({
-            issue_number: ${{ github.event.issue.number }},  
-            owner: "${{ github.repository_owner}}",
-            repo: ${{ needs.set-up.outputs.repo }},
-            body: '${{ github.actor}}, your certificate signing request is valid. Please wait for a store manager to process your request.'
-          })
-          github.rest.issues.addLabels({
-            issue_number: ${{ github.event.issue.number }},
-            owner: "${{ github.repository_owner}}",
-            repo: ${{ needs.set-up.outputs.repo }},
-            labels: ['valid csr']
-          })
-          github.rest.issues.removeLabel({
-            issue_number: ${{ github.event.issue.number }},
-            owner: "${{ github.repository_owner}}",
-            repo: ${{ needs.set-up.outputs.repo }},
-            labels: 'invalid csr'
-          })
-          github.rest.issues.removeLabel({
-            issue_number: ${{ github.event.issue.number }},
-            owner: "${{ github.repository_owner}}",
-            repo: ${{ needs.set-up.outputs.repo }},
-            labels: 'invalid csr'
-          })
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ github.event.issue.number }},  
+              owner: "${{ github.repository_owner}}",
+              repo: ${{ needs.set-up.outputs.repo }},
+              body: '${{ github.actor}}, your certificate signing request is valid. Please wait for a store manager to process your request.'
+            })
+            github.rest.issues.addLabels({
+              issue_number: ${{ github.event.issue.number }},
+              owner: "${{ github.repository_owner}}",
+              repo: ${{ needs.set-up.outputs.repo }},
+              labels: ['valid csr']
+            })
+            github.rest.issues.removeLabel({
+              issue_number: ${{ github.event.issue.number }},
+              owner: "${{ github.repository_owner}}",
+              repo: ${{ needs.set-up.outputs.repo }},
+              labels: 'invalid csr'
+            })
+            github.rest.issues.removeLabel({
+              issue_number: ${{ github.event.issue.number }},
+              owner: "${{ github.repository_owner}}",
+              repo: ${{ needs.set-up.outputs.repo }},
+              labels: 'invalid csr'
+            })
       - name: remove label to process the request
         run: |
           github.rest.issues.removeLabel({
