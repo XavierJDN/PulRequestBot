@@ -72,7 +72,7 @@ jobs:
             })
       - name: request verify the csr
         id: request-verify-csr
-        run: wget -O - -o /dev/null ${{ fromJson(needs.set-up.outputs.attachements).attachements[0] }} | tar -xz -O org.csr | openssl req -noout  -verify
+        run: wget -O - -o /dev/null ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | tar -xz -O org.csr | openssl req -noout  -verify
       - name: handle error
         if: contains(steps.request-verify-csr.outputs.result, 'OK') == false
         id: request-verify-csr-error
