@@ -16,7 +16,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const regex = /https:\/\/github\.com\/.*\/files\/.*\/*.zip/;
+            const regex = /https:\/\/github\.com\/.*\/files\/.*\/*.gz/;
             const comment = ${{ toJSON(github.event.comment) }};
             const attachements = comment.body.match(regex);
             return attachements;
@@ -46,7 +46,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           body: |
-            @${{ github.actor }} Please upload your CSR file to your comment.
+            @${{ github.actor }} Please upload your CSR file to your comment and verify that your file is a gz.
   verify-csr:
     if: needs.set-up.outputs.attachements != 'null'
     runs-on:  ubuntu-latest
@@ -72,7 +72,7 @@ jobs:
             })
       - name: request verify the csr
         id: request-verify-csr
-        run: curl -s ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | tar -xz -O csr.pem | openssl req -noout -text
+        run: curl -s ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | tar -xz -O org.csr | openssl req -noout -text
       - name: handle error
         if: contains(steps.request-verify-csr.outputs.result, 'OK') == false
         id: request-verify-csr-error
