@@ -30,7 +30,9 @@ jobs:
             baseName = repo.split("/").at(-1);
             return { baseName };
       - name: ask to upload the CSR file
-        if: ${{ steps.verify_attached_csr.outputs.attachements.length == 0 }}
+        if: |
+          echo "${{ steps.verify_attached_csr.outputs }}"
+          ${{ steps.verify_attached_csr.outputs.attachements.length == 0 }}
         uses: actions-ecosystem/action-create-comment@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
