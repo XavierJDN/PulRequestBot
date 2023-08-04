@@ -60,20 +60,20 @@ jobs:
         with:
           script: |
             github.rest.issues.addLabels({
-              issue_number: parseInt("${{ github.event.issue.number }}"),
+              issue_number: ${{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
               labels: ['csr verification in progress']
             })
       - name: request verify the csr
         id: request-verify-csr
-        uses: actions/github-script@v6
-        with:
-          script: curl -s ${{ fromJson(needs.set-up.outputs.attachements).attachements[0] }} | tar -xz -O csr.pem | openssl req -noout -text
+        run: curl -s ${{ needs.set-up.outputs.attachements[0] }} | tar -xz -O csr.pem | openssl req -noout -text
       - name: handle error
         if: contains(steps.request-verify-csr.outputs.result, 'OK') == false
         id: request-verify-csr-error
-        run: |
+        uses: actions/github-script@v6
+        with: 
+          script: |
             github.rest.issues.createComment({
               issue_number: parseInt("${{ github.event.issue.number }}"),
               owner: "${{ github.repository_owner}}",
@@ -100,6 +100,12 @@ jobs:
             owner: "${{ github.repository_owner}}",
             repo: ${{ needs.set-up.outputs.repo }},
             labels: ['valid csr']
+          })
+          github.rest.issues.removeLabel({
+            issue_number: parseInt("${{ github.event.issue.number }}"),
+            owner: "${{ github.repository_owner}}",
+            repo: ${{ needs.set-up.outputs.repo }},
+            labels: 'invalid csr'
           })
           github.rest.issues.removeLabel({
             issue_number: parseInt("${{ github.event.issue.number }}"),
