@@ -4,13 +4,14 @@ on:
   issue_comment:
     types: [created, edited]
 jobs:
-  verify-csr:
+  set-up:
     env:
       ACTIONS_RUNNER_DEBUG: true
-    permissions:
-      issues: write
     if: contains(github.event.issue.labels.*.name, 'new organization request') && startsWith(github.event.comment.body, '/csr')
     runs-on:  ubuntu-latest
+    outputs:
+      attachements: ${{ steps.verify_attached_csr.outputs.result }}
+      repo: ${{ steps.repo.outputs.result }}
     steps:
       - name: verify the CSR file is attached
         id: verify_attached_csr
@@ -29,42 +30,49 @@ jobs:
             const repo = "${{ github.repository }}"
             baseName = repo.split("/").at(-1);
             return { baseName };
+  handle-bad-csr:
+    runs-on:  ubuntu-latest
+    permissions:
+      issues: write
+    needs: [set-up]
+    if: ${{ fromJson(needs.set-up.outputs.attachements).attachements.length == 0 }}
+    steps:
       - name: ask to upload the CSR file
-        if: |
-          echo "${{ steps.verify_attached_csr.outputs }}"
-          ${{ steps.verify_attached_csr.outputs.attachements.length == 0 }}
         uses: actions-ecosystem/action-create-comment@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           body: |
             @${{ github.actor }} Please upload your CSR file to your comment.
+  verify-csr:
+    if: ${{ fromJson(needs.set-up.outputs.attachements).attachements.length == 1 }}
+    runs-on:  ubuntu-latest
+    permissions:
+      issues: write
+    needs: [set-up]
+    steps:
       - name: comment-verification-in-progress
-        if: ${{ steps.verify_attached_csr.outputs.attachements.length == 1 }}
         uses: actions-ecosystem/action-create-comment@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           body: |
             CSR file uploaded, verification in progress
       - name: add label to process the request
-        if: steps.verify_attached_csr.outputs.result.attachements.length == 1
         uses: actions/github-script@v6
         with:
           script: |
-            console.log(${{ steps.repo }});
             github.rest.issues.addLabels({
               issue_number: parseInt("${{ github.event.issue.number }}"),
               owner: "${{ github.repository_owner}}",
-              repo: "${{ steps.repo.outputs.baseName }}",
+              repo: "${{ needs.set-up.outputs.repo.baseName }}",
               labels: ['csr verification in progress']
             })
       - name: request verify the csr
         id: request-verify-csr
-        if: steps.verify_attached_csr.outputs.result.attachements.length == 1
         uses: actions/github-script@v6
         with:
-          script: curl -s ${{ steps.verify_attached_csr.outputs.result[0] }} | tar -xz -O csr.pem | openssl req -noout -text
+          script: curl -s ${{ fromJson(needs.set-up.outputs.attachements).attachements[0] }} | tar -xz -O csr.pem | openssl req -noout -text
       - name: handle error
-        if: steps.verify_attached_csr.outputs.result.length == 1 && contains(steps.request-verify-csr.outputs.result, 'OK') == false
+        if: contains(steps.request-verify-csr.outputs.result, 'OK') == false
         id: request-verify-csr-error
         run: |
             github.rest.issues.createComment({
@@ -80,7 +88,7 @@ jobs:
               labels: ['invalid csr']
             })
       - name: handle success when requesting verify the csr
-        if: endsWith(steps.request-verify-csr.outputs.result, 'OK') && steps.verify_attached_csr.outputs.result.attachements.length == 1
+        if: endsWith(steps.request-verify-csr.outputs.result, 'OK')
         run: |
           github.rest.issues.createComment({
             issue_number: context.issue.number,
@@ -101,7 +109,6 @@ jobs:
             labels: 'invalid csr'
           })
       - name: remove label to process the request
-        if: steps.verify_attached_csr.outputs.result.attachements.length == 1
         run: |
           github.rest.issues.removeLabel({
               issue_number: context.issue.number,
