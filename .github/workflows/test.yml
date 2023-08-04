@@ -74,11 +74,11 @@ jobs:
         id: request-verify-csr
         run: |
           csr_verification=$(wget -O - -o /dev/null ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | tar -xz -O org.csr | openssl req -noout  -verify 2>&1)
-          echo "test=${csr_verification}" >> $GITHUB_OUTPUT
+          echo "csr_verification=${csr_verification}" >> $GITHUB_OUTPUT
       - name: print
-        run: echo ${{ toJSON(steps.request-verify-csr.outputs) }}
+        run: echo ${{ steps.request-verify-csr.outputs.csr_verification }}
       - name: handle error
-        if: endsWith(steps.request-verify-csr.outputs, 'OK') == false
+        if: endsWith(steps.request-verify-csr.outputs.csr_verification, 'OK') == false
         id: request-verify-csr-error
         uses: actions/github-script@v6
         with: 
@@ -96,7 +96,7 @@ jobs:
               labels: ['invalid csr']
             })
       - name: handle success when requesting verify the csr
-        if: endsWith(steps.request-verify-csr.outputs, 'OK')
+        if: endsWith(steps.request-verify-csr.outputs.csr_verification, 'OK')
         run: |
           github.rest.issues.createComment({
             issue_number: parseInt("${{ github.event.issue.number }}"),  
