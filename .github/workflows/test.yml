@@ -30,12 +30,22 @@ jobs:
             const repo = "${{ github.repository }}"
             baseName = repo.split("/").at(-1);
             return { baseName };
+
+  print-outputs:
+    needs: [set-up]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Outputs
+        run: |
+          echo "Attachments: ${{ needs.set-up.outputs.attachements }}"
+          echo "Repo: ${{ needs.set-up.outputs.repo }}"
+        
   handle-bad-csr:
     runs-on:  ubuntu-latest
     permissions:
       issues: write
     needs: [set-up]
-    if: ${{ fromJson(needs.set-up.outputs.attachements).attachements.length == 0 }}
+    if: ${{ needs.set-up.outputs.attachements == '[]' }}
     steps:
       - name: ask to upload the CSR file
         uses: actions-ecosystem/action-create-comment@v1
@@ -44,7 +54,7 @@ jobs:
           body: |
             @${{ github.actor }} Please upload your CSR file to your comment.
   verify-csr:
-    if: ${{ fromJson(needs.set-up.outputs.attachements).attachements.length == 1 }}
+    if: ${{ needs.set-up.outputs.attachements != '[]' }}
     runs-on:  ubuntu-latest
     permissions:
       issues: write
