@@ -45,7 +45,7 @@ jobs:
     permissions:
       issues: write
     needs: [set-up]
-    if: ${{ needs.set-up.outputs.attachements == null }}
+    if: needs.set-up.outputs.attachements == null
     steps:
       - name: ask to upload the CSR file
         uses: actions-ecosystem/action-create-comment@v1
@@ -54,7 +54,7 @@ jobs:
           body: |
             @${{ github.actor }} Please upload your CSR file to your comment.
   verify-csr:
-    if: ${{ needs.set-up.outputs.attachements != null }}
+    if: needs.set-up.outputs.attachements != null
     runs-on:  ubuntu-latest
     permissions:
       issues: write
