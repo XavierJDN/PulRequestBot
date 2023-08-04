@@ -98,6 +98,7 @@ jobs:
       - name: handle success when requesting verify the csr
         if: endsWith(steps.request-verify-csr.outputs.csr_verification, 'OK')
         uses: actions/github-script@v6
+        continue-on-error: true
         with:
           script: |
             github.rest.issues.createComment({
@@ -126,6 +127,7 @@ jobs:
             })
       - name: remove label to process the request
         uses: actions/github-script@v6
+        continue-on-error: true
         with:
           script: |
             github.rest.issues.removeLabel({
