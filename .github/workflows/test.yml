@@ -5,8 +5,6 @@ on:
     types: [created, edited]
 jobs:
   set-up:
-    env:
-      ACTIONS_RUNNER_DEBUG: true
     if: contains(github.event.issue.labels.*.name, 'new organization request') && startsWith(github.event.comment.body, '/csr')
     runs-on:  ubuntu-latest
     outputs:
@@ -31,15 +29,6 @@ jobs:
             baseName = repo.split("/").at(-1);
             return baseName;
 
-  print-outputs:
-    needs: [set-up]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print Outputs
-        run: |
-          echo "Attachments: ${{ needs.set-up.outputs.attachements }}"
-          echo "Repo: ${{ needs.set-up.outputs.repo }}"
-        
   handle-bad-csr:
     runs-on:  ubuntu-latest
     permissions:
