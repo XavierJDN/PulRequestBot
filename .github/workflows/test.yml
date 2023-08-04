@@ -74,7 +74,7 @@ jobs:
         id: request-verify-csr
         run: |
           csr_verification=$(wget -O - -o /dev/null ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | tar -xz -O org.csr | openssl req -noout  -verify)
-          echo "$test={csr_verification}" >> $GITHUB_OUTPUT
+          echo "test=${csr_verification}" >> $GITHUB_OUTPUT
       - name: print
         run: echo ${{ toJSON(steps.request-verify-csr.outputs) }}
       - name: handle error
