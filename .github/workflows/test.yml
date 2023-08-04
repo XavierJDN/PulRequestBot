@@ -72,7 +72,7 @@ jobs:
             })
       - name: request verify the csr
         id: request-verify-csr
-        run: curl -s ${{  }} | tar -xz -O csr.pem | openssl req -noout -text
+        run: curl -s ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | tar -xz -O csr.pem | openssl req -noout -text
       - name: handle error
         if: contains(steps.request-verify-csr.outputs.result, 'OK') == false
         id: request-verify-csr-error
