@@ -16,7 +16,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const regex = /https:\/\/github\.com\/.*\/files\/.*\//;
+            const regex = /https:\/\/github\.com\/.*\/files\/.*\/*.zip/;
             const comment = ${{ toJSON(github.event.comment) }};
             const attachements = comment.body.match(regex);
             return attachements;
