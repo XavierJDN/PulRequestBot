@@ -125,10 +125,12 @@ jobs:
               name: ['csr verification in progress']
             })
       - name: remove label to process the request
-        run: |
-          github.rest.issues.removeLabel({
-              issue_number: ${{ github.event.issue.number }},
-              owner: "${{ github.repository_owner}}",
-              repo: ${{ needs.set-up.outputs.repo }},
-              name: ['verification in progress']
-            })
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.removeLabel({
+                issue_number: ${{ github.event.issue.number }},
+                owner: "${{ github.repository_owner}}",
+                repo: ${{ needs.set-up.outputs.repo }},
+                name: ['verification in progress']
+              })
