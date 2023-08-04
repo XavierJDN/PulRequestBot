@@ -97,6 +97,7 @@ jobs:
             })
       - name: handle success when requesting verify the csr
         if: endsWith(steps.request-verify-csr.outputs.csr_verification, 'OK')
+        uses: actions/github-script@v6
         run: |
           github.rest.issues.createComment({
             issue_number: ${{ github.event.issue.number }},  
