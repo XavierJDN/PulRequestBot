@@ -1,46 +1,49 @@
 name: jami-store-requests-manager
-run-name: New organization request from ${{ github.actor }}
 on:
   issue_comment:
     types: [created, edited]
+
 jobs:
   verify-csr:
-    permissions:
-      issues: write
+    runs-on: ubuntu-latest
     if: contains(github.event.issue.labels.*.name, 'new organization request') && startsWith(github.event.comment.body, '/csr')
-    runs-on:  ubuntu-latest
+
     steps:
-      - name: verify the CSR file is attached
+      - name: Verify the CSR file is attached
         id: verify_attached_csr
         uses: actions/github-script@v6
         with:
           script: |
             const regex = /https:\/\/github\.com\/.*\/files\/.*/;
             const comment = ${{ toJSON(github.event.comment) }};
-            const attachements = comment.body.match(regex);
-            return { attachements };
-      - name: get-repo-base-name
+            const attachments = comment.body.match(regex);
+            return { attachments };
+
+      - name: Get repo base name
         id: repo
         uses: actions/github-script@v6
         with:
           script: |
-            const repo = "${{ github.repository }}"
-            baseName = repo.split("/").at(-1);
+            const repo = "${{ github.repository }}";
+            const baseName = repo.split("/").at(-1);
             return { baseName };
-      - name: ask to upload the CSR file
-        if: ${{ toJSON(steps.verify_attached_csr.outputs.result).attachements.length == 0 }}
+
+      - name: Ask to upload the CSR file
+        if: ${{ steps.verify_attached_csr.outputs.attachments.length == 0 }}
         uses: actions-ecosystem/action-create-comment@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           body: |
             @${{ github.actor }} Please upload your CSR file to your comment.
-      - name: comment-verification-in-progress
-        if: steps.verify_attached_csr.outputs.result.attachements.length == 1
+
+      - name: Comment verification in progress
+        if: steps.verify_attached_csr.outputs.attachments.length == 1
         uses: actions-ecosystem/action-create-comment@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           body: |
-            CSR file uploaded, verification in progress
+            CSR file uploaded, verification in progress.
+
       - name: add label to process the request
         if: steps.verify_attached_csr.outputs.result.attachements.length == 1
         uses: actions/github-script@v6
