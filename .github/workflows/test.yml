@@ -21,7 +21,7 @@ jobs:
             const regex = /https:\/\/github\.com\/.*\/files\/.*/;
             const comment = ${{ toJSON(github.event.comment) }};
             const attachements = comment.body.match(regex);
-            return { attachements };
+            return attachements;
       - name: get-repo-base-name
         id: repo
         uses: actions/github-script@v6
@@ -29,7 +29,7 @@ jobs:
           script: |
             const repo = "${{ github.repository }}"
             baseName = repo.split("/").at(-1);
-            return { baseName };
+            return baseName;
 
   print-outputs:
     needs: [set-up]
