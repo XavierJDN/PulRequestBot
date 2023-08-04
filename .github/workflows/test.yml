@@ -81,7 +81,7 @@ jobs:
         if: endsWith(steps.request-verify-csr.outputs.csr_verification, 'OK') == false
         id: request-verify-csr-error
         uses: actions/github-script@v6
-        with: 
+        with:
           script: |
             github.rest.issues.createComment({
               issue_number: {{ github.event.issue.number }},
@@ -101,7 +101,7 @@ jobs:
         with:
           script: |
             github.rest.issues.createComment({
-              issue_number: ${{ github.event.issue.number }},  
+              issue_number: ${{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
               body: '${{ github.actor}}, your certificate signing request is valid. Please wait for a store manager to process your request.'
@@ -116,13 +116,13 @@ jobs:
               issue_number: ${{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
-              labels: 'invalid csr'
+              name: ['invalid csr']
             })
             github.rest.issues.removeLabel({
               issue_number: ${{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
-              labels: 'csr verification in progress'
+              name: ['csr verification in progress']
             })
       - name: remove label to process the request
         run: |
@@ -130,5 +130,5 @@ jobs:
               issue_number: ${{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
-              name: 'verification in progress'
+              name: ['verification in progress']
             })
