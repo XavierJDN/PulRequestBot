@@ -45,7 +45,7 @@ jobs:
     permissions:
       issues: write
     needs: [set-up]
-    if: needs.set-up.outputs.attachements == null
+    if: needs.set-up.outputs.attachements == 'null'
     steps:
       - name: ask to upload the CSR file
         uses: actions-ecosystem/action-create-comment@v1
