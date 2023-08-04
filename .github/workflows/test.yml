@@ -28,7 +28,12 @@ jobs:
             const repo = "${{ github.repository }}"
             baseName = repo.split("/").at(-1);
             return baseName;
-
+  print-attachement:
+    runs-on:  ubuntu-latest
+    needs: [set-up]
+    steps:
+      - name: print
+        run: echo "${{ toJSON(needs.set-up.outputs.attachements) }}"
   handle-bad-csr:
     runs-on:  ubuntu-latest
     permissions:
@@ -67,7 +72,7 @@ jobs:
             })
       - name: request verify the csr
         id: request-verify-csr
-        run: curl -s ${{ needs.set-up.outputs.attachements[0] }} | tar -xz -O csr.pem | openssl req -noout -text
+        run: curl -s ${{  }} | tar -xz -O csr.pem | openssl req -noout -text
       - name: handle error
         if: contains(steps.request-verify-csr.outputs.result, 'OK') == false
         id: request-verify-csr-error
