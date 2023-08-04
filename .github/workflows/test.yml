@@ -84,13 +84,13 @@ jobs:
         with: 
           script: |
             github.rest.issues.createComment({
-              issue_number: parseInt("${{ github.event.issue.number }}"),
+              issue_number: {{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
               body: 'CSR is invalid, Please retry'
             })
             github.rest.issues.addLabels({
-              issue_number: parseInt("${{ github.event.issue.number }}"),
+              issue_number: ${{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
               labels: ['invalid csr']
@@ -99,25 +99,25 @@ jobs:
         if: endsWith(steps.request-verify-csr.outputs.csr_verification, 'OK')
         run: |
           github.rest.issues.createComment({
-            issue_number: parseInt("${{ github.event.issue.number }}"),  
+            issue_number: ${{ github.event.issue.number }},  
             owner: "${{ github.repository_owner}}",
             repo: ${{ needs.set-up.outputs.repo }},
             body: '${{ github.actor}}, your certificate signing request is valid. Please wait for a store manager to process your request.'
           })
           github.rest.issues.addLabels({
-            issue_number: parseInt("${{ github.event.issue.number }}"),
+            issue_number: ${{ github.event.issue.number }},
             owner: "${{ github.repository_owner}}",
             repo: ${{ needs.set-up.outputs.repo }},
             labels: ['valid csr']
           })
           github.rest.issues.removeLabel({
-            issue_number: parseInt("${{ github.event.issue.number }}"),
+            issue_number: ${{ github.event.issue.number }},
             owner: "${{ github.repository_owner}}",
             repo: ${{ needs.set-up.outputs.repo }},
             labels: 'invalid csr'
           })
           github.rest.issues.removeLabel({
-            issue_number: parseInt("${{ github.event.issue.number }}"),
+            issue_number: ${{ github.event.issue.number }},
             owner: "${{ github.repository_owner}}",
             repo: ${{ needs.set-up.outputs.repo }},
             labels: 'invalid csr'
@@ -125,7 +125,7 @@ jobs:
       - name: remove label to process the request
         run: |
           github.rest.issues.removeLabel({
-              issue_number: parseInt("${{ github.event.issue.number }}"),
+              issue_number: ${{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
               name: 'verification in progress'
