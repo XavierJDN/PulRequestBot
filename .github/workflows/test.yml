@@ -10,6 +10,7 @@ jobs:
     outputs:
       attachements: ${{ steps.verify_attached_csr.outputs.result }}
       repo: ${{ steps.repo.outputs.result }}
+      fileName: ${{ steps.request.outputs.result }}
     steps:
       - name: verify the CSR file is attached
         id: verify_attached_csr
@@ -20,6 +21,15 @@ jobs:
             const comment = ${{ toJSON(github.event.comment) }};
             const attachements = comment.body.match(regex);
             return attachements;
+      - name: get-request-file-name
+        id: request
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const request = "${{ toJson(steps.verify_attached_csr.outputs.result)[0] }}"
+            const extensionIndex = request.lastIndexOf(".");
+            fileName = request.substring(0, extensionIndex);
+            return fileName;
       - name: get-repo-base-name
         id: repo
         uses: actions/github-script@v6
@@ -73,10 +83,8 @@ jobs:
       - name: request verify the csr
         id: request-verify-csr
         run: |
-          csr_verification=$(wget -O - -o /dev/null ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | tar -xz -O org.csr | openssl req -noout  -verify 2>&1)
+          csr_verification=$(wget -O - -o /dev/null ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | tar -xz -O ${{ needs.set-up.outputs.fileName }} | openssl req -noout  -verify 2>&1)
           echo "csr_verification=${csr_verification}" >> $GITHUB_OUTPUT
-      - name: print
-        run: echo ${{ steps.request-verify-csr.outputs.csr_verification }}
       - name: handle error
         if: endsWith(steps.request-verify-csr.outputs.csr_verification, 'OK') == false
         id: request-verify-csr-error
