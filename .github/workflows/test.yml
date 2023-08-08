@@ -27,9 +27,8 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-
             const request = "${{ fromJSON(steps.verify_attached_csr.outputs.result)[0] }}"
-            const extensionIndex = request.lastIndexOf(".");
+            const extensionIndex = request.split("/").at(-1).lastIndexOf(".");
             fileName = request.substring(0, extensionIndex);
             return fileName;
       - name: get-repo-base-name
