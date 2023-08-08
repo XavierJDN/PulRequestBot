@@ -93,7 +93,7 @@ jobs:
         with:
           script: |
             github.rest.issues.createComment({
-              issue_number: {{ github.event.issue.number }},
+              issue_number: ${{ github.event.issue.number }},
               owner: "${{ github.repository_owner}}",
               repo: ${{ needs.set-up.outputs.repo }},
               body: 'CSR is invalid, Please retry'
