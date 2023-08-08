@@ -28,7 +28,7 @@ jobs:
         with:
           script: |
 
-            const request = ${{ fromJSON(steps.verify_attached_csr.outputs.result)[0] }}
+            const request = "${{ fromJSON(steps.verify_attached_csr.outputs.result)[0] }}"
             const extensionIndex = request.lastIndexOf(".");
             fileName = request.substring(0, extensionIndex);
             return fileName;
