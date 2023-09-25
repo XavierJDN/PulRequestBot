@@ -39,21 +39,23 @@ jobs:
             const repo = "${{ github.repository }}"
             baseName = repo.split("/").at(-1);
             return baseName;
-
-  set-plugin-tool:
+  git-dep:
     if: contains(github.event.issue.labels.*.name, 'new upload request') && startsWith(github.event.comment.body, '/upload')
     runs-on:  ubuntu-latest
     steps:
-    - name: checkout jami-plugin repo
-      id: checkout-plugin-repo
-      uses: actions/checkout@v2
-      with:
-        repository: 'https://review.jami.net/jami-plugins'
-        ref: 'master'
-    - name: install dependencies for jami-plugin
-      run: |
-        cd ${{ github.workspace }}/jami-plugin
-        pip3 install -r requirements.txt && pip3 install -r certificate_requirements.txt
+      - name: Install git
+        run: sudo apt-get install git
+
+  set-plugin-tool:
+    needs: [git-dep]
+    runs-on:  ubuntu-latest
+    steps:
+      - name: checkout jami-plugin repo
+        id: checkout-plugin-repo
+        run: |
+          git clone "https://review.jami.net/jami-plugins"
+          cd ${{ github.workspace }}/jami-plugin
+          pip3 install -r requirements.txt && pip3 install -r certificate_requirements.txt
 
   print-attachement:
     runs-on:  ubuntu-latest
