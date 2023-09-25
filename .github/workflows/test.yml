@@ -53,8 +53,9 @@ jobs:
       - name: checkout jami-plugin repo
         id: checkout-plugin-repo
         run: |
+          cd ${{ github.workspace }}
           git clone "https://review.jami.net/jami-plugins"
-          cd ${{ github.workspace }}/jami-plugin
+          cd ${{ github.workspace }}/jami-plugins
           pip3 install -r requirements.txt && pip3 install -r certificate_requirements.txt
 
   print-attachement:
