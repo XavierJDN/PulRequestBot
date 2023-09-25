@@ -55,6 +55,8 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           git clone "https://review.jami.net/jami-plugins"
+          # This should be remove on production
+          git fetch https://review.jami.net/jami-plugins refs/changes/63/25763/10 && git checkout FETCH_HEAD
           cd ${{ github.workspace }}/jami-plugins/SDK
           pip3 install -r requirements.txt && pip3 install -r certificate_requirements.txt
 
