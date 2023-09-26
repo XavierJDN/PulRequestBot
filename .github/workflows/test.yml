@@ -17,10 +17,10 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const regex = /https:\/\/github\.com\/.*\/files\/.*\/*.gz/;
+            const regex = /https?:\/\/.*\/.*\.jpl/;
             const comment = ${{ toJSON(github.event.comment) }};
             const attachements = comment.body.match(regex);
-            console.log(attachements)
+            console.log(attachements);
             return attachements;
       - name: get-request-file-name
         id: request
@@ -111,10 +111,12 @@ jobs:
               repo: ${{ needs.set-up.outputs.repo }},
               labels: ['plugin certificate verification in progress']
             })
-      - name: request verify the plugin certiuficate
+      - name: request verify the plugin certificate
         id: request-verify-plugin-certificate
         run: |
-          verification=$(wget -O - -o /dev/null ${{ fromJSON(needs.set-up.outputs.attachements)[0] }} | gzip -dc | openssl req -noout  -verify 2>&1)
+          curl -o /tmp/${{ fromJson(needs.set-up.outputs.fileName) }} -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
+          cd ${{ github.workspace }}/jami-plugin/SDK
+          verification=$(python3 ./certKey.py --plugin verify --path /tmp/${{ fromJson(needs.set-up.outputs.fileName) }} 2>&1)
           echo "verification=${verification}" >> $GITHUB_OUTPUT
       - name: handle error
         if: endsWith(steps.request-verify-plugin-certificate.outputs.verification, 'OK') == false || failure()
@@ -164,38 +166,3 @@ jobs:
               repo: ${{ needs.set-up.outputs.repo }},
               name: ['plugin certificate verification in progress']
             })
-  verify-signature:
-    if: needs.set-up.outputs.attachements != 'null'
-    runs-on:  ubuntu-latest
-    permissions:
-        issues: write
-    needs: [set-up, set-plugin-tool, verify-certificate]
-    steps:
-      - name: add comment to inform the user that the signature is in progress
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: ${{ github.event.issue.number }},
-              owner: "${{ github.repository_owner}}",
-              repo: ${{ needs.set-up.outputs.repo }},
-              body: |
-                Signature verification in progress
-            })
-      - name: add label to process the request
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: ${{ github.event.issue.number }},
-              owner: "${{ github.repository_owner}}",
-              repo: ${{ needs.set-up.outputs.repo }},
-              labels: ['verification in progress']
-            })
-      - name: verify the signature
-        id: verify-signature
-        run: |
-          wget -O /tmp/plugin.jpl.gz -o /dev/null ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
-          cd ${{ github.workspace }}/jami-plugin/SDK
-          signature_verification=$(python3 ./certKey.py archive verify --path /tmp/plugin.jpl.gz 2>&1)
-          echo "signature_verification=${signature_verification}" >> $GITHUB_OUTPUT
