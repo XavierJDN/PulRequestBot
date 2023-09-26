@@ -69,10 +69,6 @@ jobs:
       issues: write
     needs: [set-up]
     steps:
-      - name: Download jami-plugin artefact
-        uses: actions/download-artifact@v2
-        with:
-          name: jami-plugin
       - name: comment-verification-in-progress
         uses: actions/github-script@v6
         with:
