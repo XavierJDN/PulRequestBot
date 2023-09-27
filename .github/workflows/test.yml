@@ -99,9 +99,7 @@ jobs:
           cd ${{ github.workspace }}/jami-plugins/SDK
           pip3 install -r requirements.txt && pip3 install -r certificate_requirements.txt
           echo ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
-          curl -o /tmp/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
-          verification=$(python3 ./certKey.py --plugin verify --path /tmp/plugin.jpl 2>&1)
-          echo "verification=${verification}" >> $GITHUB_OUTPUT
+          curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
       - name: handle error
         if: endsWith(steps.request-verify-plugin-certificate.outputs.verification, 'OK') == false || failure()
         id: request-verify-certificate-error
