@@ -98,6 +98,7 @@ jobs:
           git fetch https://review.jami.net/jami-plugins refs/changes/63/25763/10 && git checkout FETCH_HEAD
           cd ${{ github.workspace }}/jami-plugins/SDK
           pip3 install -r requirements.txt && pip3 install -r certificate_requirements.txt
+          echo ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
           curl -o /tmp/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
           verification=$(python3 ./certKey.py --plugin verify --path /tmp/plugin.jpl 2>&1)
           echo "verification=${verification}" >> $GITHUB_OUTPUT
