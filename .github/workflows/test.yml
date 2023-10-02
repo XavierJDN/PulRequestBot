@@ -95,10 +95,10 @@ jobs:
           cd ${{ github.workspace }}
           git clone "https://review.jami.net/jami-plugins"
           # This should be remove on production
+          cd ${{ github.workspace }}/jami-plugins/
           git fetch https://review.jami.net/jami-plugins refs/changes/63/25763/11 && git checkout FETCH_HEAD
           cd ${{ github.workspace }}/jami-plugins/SDK
           pip3 install -r requirements.txt && pip3 install -r certificate_requirements.txt
-          echo ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
           curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
           python3 ./certKey.py --plugin verify --path ${{ github.workspace }}/plugin.jpl /tmp
           # echo "verification=${verification}" >> $GITHUB_OUTPUT
