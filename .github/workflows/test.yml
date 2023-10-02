@@ -102,6 +102,7 @@ jobs:
           curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
           verification=$(python3 ./certKey.py --plugin verify --path ${{ github.workspace }}/plugin.jpl /tmp 2>&1)
           echo "verification=${verification}" >> $GITHUB_OUTPUT
+          echo $verification
       - name: handle error
         if: endsWith(steps.request-verify-plugin-certificate.outputs.verification, 'OK') == false || failure()
         id: request-verify-certificate-error
