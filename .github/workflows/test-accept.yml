@@ -1,0 +1,106 @@
+name: jami-store-requests-manager-accept
+run-name: New Upload request from ${{ github.actor }}
+on:
+  issue_comment:
+    types: [edited]
+jobs:
+    set-up:
+        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline')) && github.event.comment.author_association == 'MEMBER'
+        runs-on:  ubuntu-latest
+        outputs:
+            repo: ${{ steps.repo.outputs.result }}
+            plugin: ${{ steps.find-plugin.outputs.result }}
+        steps:
+            - name: get-repo-base-name
+              id: repo
+              uses: actions/github-script@v6
+              with:
+                script: |
+                    const repo = "${{ github.repository }}"
+                    baseName = repo.split("/").at(-1);
+                    return baseName;
+            - name: find uploaded plugin
+              id: find-plugin
+              uses: actions/github-script@v6
+              with:
+                script: |
+                    const regex = /https?:\/\/.*\/.*\.jpl/;
+                    const repo = "${{ github.repository }}"
+                    const { data: comments } = await github.rest.issues.listComments({
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ steps.repo.outputs.result }},
+                        issue_number: ${{ github.event.issue.number }}
+                    });
+                    const uploadComment = comments.find(comment => comment.body.includes('/upload'));
+                    return uploadComment === undefined ? null: uploadComment.body.match(regex);
+    handle-error:
+        needs: [set-up]
+        if: needs.set-up.outputs.plugin == 'null'
+        runs-on: ubuntu-latest
+        steps:
+            - name: handle error
+              id: handle-error
+              uses: actions/github-script@v6
+              with:
+                script: |
+                    github.rest.issues.createComment({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        body: '${{ github.actor}}, Please wait the organization to upload the plugin.'
+                    });
+    decline:
+      needs: [set-up]
+      name: Decline request
+      if: startsWith(github.event.comment.body, '/decline')
+      runs-on: ubuntu-latest
+      steps:
+          - name: Decline request
+            id: decline-request
+            run: |
+              github.rest.issues.createComment({
+                  issue_number: ${{ github.event.issue.number }},
+                  owner: "${{ github.repository_owner}}",
+                  repo: ${{ github.repository }},
+                  body: 'The request was declined. Please change your plugin and request again.'
+              });
+              github.rest.issues.addLabels({
+                  issue_number: ${{ github.event.issue.number }},
+                  owner: "${{ github.repository_owner}}",
+                  repo: ${{ github.repository }},
+                  labels: ['declined request']
+              });
+    accept-request:
+        needs: [set-up]
+        if: startsWith(github.event.comment.body, '/accept') && needs.set-up.outputs.plugin != 'null'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Accept request
+              id: accept-request
+              run: |
+                github.rest.issues.createComment({
+                    issue_number: ${{ github.event.issue.number }},
+                    owner: "${{ github.repository_owner}}",
+                    repo: ${{ needs.set-up.outputs.repo }},
+                    body: 'The request was accepted. Please wait for the plugin to be uploaded.'
+                });
+                github.rest.issues.addLabels({
+                    issue_number: ${{ github.event.issue.number }},
+                    owner: "${{ github.repository_owner}}",
+                    repo: ${{ needs.set-up.outputs.repo }},
+                    labels: ['accepted request', 'waiting for upload']
+                });
+                github.rest.issues.removeLabel({
+                    issue_number: ${{ github.event.issue.number }},
+                    owner: "${{ github.repository_owner}}",
+                    repo: ${{ needs.set-up.outputs.repo }},
+                    name: 'declined request'
+                });
+            - name: Set up SSH connection
+              uses: webfactory/ssh-agent@v0.5.0
+              with:
+                ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+            - name: Upload plugin
+              run: |
+                curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
+                ssh -T user@remote
