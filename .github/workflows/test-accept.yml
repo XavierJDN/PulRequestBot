@@ -62,19 +62,21 @@ jobs:
       steps:
           - name: Decline request
             id: decline-request
-            run: |
-              github.rest.issues.createComment({
-                  issue_number: ${{ github.event.issue.number }},
-                  owner: "${{ github.repository_owner}}",
-                  repo: ${{ github.repository }},
-                  body: 'The request was declined. Please change your plugin and request again.'
-              });
-              github.rest.issues.addLabels({
-                  issue_number: ${{ github.event.issue.number }},
-                  owner: "${{ github.repository_owner}}",
-                  repo: ${{ github.repository }},
-                  labels: ['declined request']
-              });
+            uses: actions/github-script@v6
+            with:
+              script: |
+                github.rest.issues.createComment({
+                    issue_number: ${{ github.event.issue.number }},
+                    owner: "${{ github.repository_owner}}",
+                    repo: ${{ github.repository }},
+                    body: 'The request was declined. Please change your plugin and request again.'
+                });
+                github.rest.issues.addLabels({
+                    issue_number: ${{ github.event.issue.number }},
+                    owner: "${{ github.repository_owner}}",
+                    repo: ${{ github.repository }},
+                    labels: ['declined request']
+                });
     accept-request:
         needs: [set-up]
         if: startsWith(github.event.comment.body, '/accept') && needs.set-up.outputs.plugin != 'null'
@@ -84,25 +86,27 @@ jobs:
         steps:
             - name: Accept request
               id: accept-request
-              run: |
-                github.rest.issues.createComment({
-                    issue_number: ${{ github.event.issue.number }},
-                    owner: "${{ github.repository_owner}}",
-                    repo: ${{ needs.set-up.outputs.repo }},
-                    body: 'The request was accepted. Please wait for the plugin to be uploaded.'
-                });
-                github.rest.issues.addLabels({
-                    issue_number: ${{ github.event.issue.number }},
-                    owner: "${{ github.repository_owner}}",
-                    repo: ${{ needs.set-up.outputs.repo }},
-                    labels: ['accepted request', 'waiting for upload']
-                });
-                github.rest.issues.removeLabel({
-                    issue_number: ${{ github.event.issue.number }},
-                    owner: "${{ github.repository_owner}}",
-                    repo: ${{ needs.set-up.outputs.repo }},
-                    name: 'declined request'
-                });
+              uses: actions/github-script@v6
+              with:
+                script: |
+                  github.rest.issues.createComment({
+                      issue_number: ${{ github.event.issue.number }},
+                      owner: "${{ github.repository_owner}}",
+                      repo: ${{ needs.set-up.outputs.repo }},
+                      body: 'The request was accepted. Please wait for the plugin to be uploaded.'
+                  });
+                  github.rest.issues.addLabels({
+                      issue_number: ${{ github.event.issue.number }},
+                      owner: "${{ github.repository_owner}}",
+                      repo: ${{ needs.set-up.outputs.repo }},
+                      labels: ['accepted request', 'waiting for upload']
+                  });
+                  github.rest.issues.removeLabel({
+                      issue_number: ${{ github.event.issue.number }},
+                      owner: "${{ github.repository_owner}}",
+                      repo: ${{ needs.set-up.outputs.repo }},
+                      name: 'declined request'
+                  });
             - name: Set up SSH connection
               uses: webfactory/ssh-agent@v0.5.0
               with:
