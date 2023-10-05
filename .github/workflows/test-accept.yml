@@ -68,13 +68,13 @@ jobs:
                 github.rest.issues.createComment({
                     issue_number: ${{ github.event.issue.number }},
                     owner: "${{ github.repository_owner}}",
-                    repo: ${{ github.repository }},
+                    repo: ${{ needs.set-up.outputs.repo }},
                     body: 'The request was declined. Please change your plugin and request again.'
                 });
                 github.rest.issues.addLabels({
                     issue_number: ${{ github.event.issue.number }},
                     owner: "${{ github.repository_owner}}",
-                    repo: ${{ github.repository }},
+                    repo: ${{ needs.set-up.outputs.repo }},
                     labels: ['declined request']
                 });
     accept-request:
