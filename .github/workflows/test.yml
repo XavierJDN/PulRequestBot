@@ -36,7 +36,7 @@ jobs:
               uses: actions/github-script@v6
               with:
                 script: |
-                    const regex = /https?:\/\/.*\/.*\.jpl/;
+                    const regex = /https?:\/\/.*\.jpl\b/;
                     const repo = "${{ github.repository }}"
                     const { data: comments } = await github.rest.issues.listComments({
                         owner: "${{ github.repository_owner}}",
