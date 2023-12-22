@@ -44,10 +44,12 @@ jobs:
                         issue_number: ${{ github.event.issue.number }}
                     });
                     const uploadComment = comments.find(comment => comment.body.includes('/upload'));
+                    console.log(uploadComment);
                     return uploadComment === undefined ? null: uploadComment.body.match(regex);
             - name: find the name of the plugin
               id: find-plugin-name
               run: |
+                echo ${{ fromJSON(steps.find-plugin.outputs)[0] }}
                 pluginFile=$(basename ${{ fromJSON(steps.find-plugin.outputs)[0] }})
                 echo "pluginFile%.*" >> $GITHUB_OUTPUT
             - name: find the architecture of the plugin
