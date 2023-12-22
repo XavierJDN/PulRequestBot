@@ -48,7 +48,7 @@ jobs:
             - name: find the name of the plugin
               id: find-plugin-name
               run: |
-                echo "$( $(basename ${{ fromJSON(steps.find-plugin.outputs)[0] }})%.* )" >> $GITHUB_OUTPUT
+                echo "$(basename ${{ fromJSON(steps.find-plugin.outputs)[0] }})%.*" >> $GITHUB_OUTPUT
             - name: find the architecture of the plugin
               id: find-plugin-arch
               run: |
