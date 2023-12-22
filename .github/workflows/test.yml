@@ -44,7 +44,7 @@ jobs:
                         issue_number: ${{ github.event.issue.number }}
                     });
                     const uploadComment = comments.find(comment => comment.body.includes('/upload'));
-                    console.log(uploadComment);
+                    console.log(uploadComment.body.match(regex));
                     return uploadComment === undefined ? null: uploadComment.body.match(regex);
             - name: find the name of the plugin
               id: find-plugin-name
