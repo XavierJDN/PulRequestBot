@@ -11,6 +11,8 @@ jobs:
         outputs:
             repo: ${{ steps.repo.outputs.result }}
             plugin: ${{ steps.find-plugin.outputs.result }}
+            pluginName: ${{ steps.find-plugin-name.outputs.result }}
+            pluginArch: ${{ steps.find-plugin-arch.outputs.result }}
         steps:
             - name: get-repo-base-name
               id: repo
@@ -34,6 +36,18 @@ jobs:
                     });
                     const uploadComment = comments.find(comment => comment.body.includes('/upload'));
                     return uploadComment === undefined ? null: uploadComment.body.match(regex);
+            - name: find the name of the plugin
+              id: find-plugin-name
+              run: |
+                echo "$( $(basename ${{ fromJSON(steps.find-plugin.outputs)[0] }})%.* )" >> $GITHUB_OUTPUT
+            - name: find the architecture of the plugin
+              id: find-plugin-arch
+              run: |
+                curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(steps.find-plugin.outputs)[0] }}
+                arches=$(unzip -l ${{ github.workspace }}/plugin.jpl lib)
+                IFS=$'\n' read -rd '' -a archArray <<< "$arches"
+                echo "${archArray[1]}" >> $GITHUB_OUTPUT
+
     handle-error:
         needs: [set-up]
         if: needs.set-up.outputs.plugin == 'null'
@@ -51,6 +65,83 @@ jobs:
                         owner: "${{ github.repository_owner}}",
                         repo: ${{ needs.set-up.outputs.repo }},
                         body: '${{ github.actor}}, Please wait the organization to upload the plugin.'
+                    });
+    issuer-verification:
+        needs: [set-up]
+        if: needs.set-up.outputs.plugin != 'null' && github.event.comment.author_association != 'MEMBER'
+        runs-on: ubuntu-latest
+        permissions:
+          issues: write
+        steps:
+            - name: issuer verification Process
+              id: issuer-verification
+              uses: actions/github-script@v6
+              with:
+                script: |
+                    github.rest.issues.createComment({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        body: 'A issuer verification is currently in progress. Please wait for the result.'
+                    });
+            - name: Get the plugin certificate
+              id: get-certificate
+              run: |
+                curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
+                certificate=$(unzip -p ${{ github.workspace }}/plugin.jpl ${{ fromJson(needs.set-up.outputs.pluginName) }}.crt)
+                echo -n $certificate | base64 >> $GITHUB_OUTPUT
+            - name: issuer   check
+              id: issuer-check
+              uses: fjogeleit/http-request-action@v1
+              with:
+                url: 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ fromJSON(needs.set-up.outputs.pluginName) }}'
+                method: 'GET'
+                customHeaders: '{"Authorization": "${{ steps.get-certificate.outputs.result }}"}'
+            - name: issuer check result
+              id: issuer-check-result
+              run: |
+                echo "${{ steps.issuer-check.outputs.response }}" >> $GITHUB_OUTPUT
+            - name: decline request
+              if: fromJson(steps.issuer-check-result.outputs.result).status == '403'
+              id: decline-request
+              uses: actions/github-script@v6
+              with:
+                script: |
+                    github.rest.issues.createComment({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        body: 'The issuer verification failed. Please change your plugin and request again.'
+                    });
+                    github.rest.issues.addLabels({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        labels: ['declined request']
+                    });
+            - name: accept request
+              if: fromJson(steps.issuer-check-result.outputs.result).status == '200'
+              id: accept-request
+              uses: actions/github-script@v6
+              with:
+                script: |
+                    github.rest.issues.createComment({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        body: 'The issuer verification was successful. Please wait for the plugin to be uploaded.'
+                    });
+                    github.rest.issues.addLabels({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        labels: ['accepted request', 'waiting for upload']
+                    });
+                    github.rest.issues.removeLabel({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        name: 'declined request'
                     });
     decline:
       needs: [set-up]
@@ -113,5 +204,7 @@ jobs:
                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             - name: Upload plugin
               run: |
+                export VERSION=date +%Y%m%d%H%M%S
+                export BRANCH_VERSION=date +%Y%m%d
                 curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
                 ssh -T user@remote
