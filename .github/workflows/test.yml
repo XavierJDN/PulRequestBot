@@ -3,8 +3,6 @@ run-name: New Upload request from ${{ github.actor }}
 on:
   issue_comment:
     types: [edited, created]
-env:
-  ACTIONS_STEP_DEBUG: true
 jobs:
     set-up:
         if: contains(github.event.issue.labels.*.name, 'new upload request') && startsWith(github.event.comment.body, '/upload')
@@ -49,15 +47,15 @@ jobs:
           - name: find the name of the plugin
             id: find_plugin_name
             run: |
-              pluginFile=$(basename "${{ fromJSON(steps.find_plugin.outputs.result)[0] }}")
-              echo "result=${pluginFile%.*}" >> $GITHUB_OUTPUT
+              PLUGIN_FILE=$(basename "${{ fromJSON(steps.find_plugin.outputs.result)[0] }}")
+              echo "result=${PLUGIN_FILE%.*}" >> $GITHUB_OUTPUT
           - name: find the architecture of the plugin
             id: find_plugin_arch
             run: |
               curl -o ${{ github.workspace }}/plugin.jpl -L "${{ fromJSON(steps.find_plugin.outputs.result)[0] }}"
-              arches=$(unzip -l ${{ github.workspace }}/plugins.jpl "lib/*" | grep lib | awk '{ print $NF }')
-              IFS=$'\n' read -rd '' -a archArray <<< "$arches"
-              echo "result=${archArray[1]}" >> $GITHUB_OUTPUT
+              ARCHES=$(unzip -l ${{ github.workspace }}/plugin.jpl "lib/*" | grep lib | awk '{ print $NF }')
+              PLUGIN_ARCHES=$(jq -nR '[inputs]' <<< "${ARCHES[@]}")
+              echo "result=${PLUGIN_ARCHES}" >> $GITHUB_OUTPUT
     print-attachement:
       runs-on:  ubuntu-latest
       needs: [set-up]
@@ -200,7 +198,7 @@ jobs:
               id: issuer-check
               uses: fjogeleit/http-request-action@v1
               with:
-                url: 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ fromJSON(needs.set-up.outputs.pluginName) }}'
+                url: 'https://plugins.jami.net/upload/${{ fromJson(needs.set-up.outputs.pluginArch)[0] }}/${{ fromJSON(needs.set-up.outputs.pluginName) }}'
                 method: 'GET'
                 customHeaders: '{"Authorization": "${{ steps.get-certificate.outputs.result }}"}'
             - name: issuer check result
