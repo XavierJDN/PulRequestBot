@@ -31,7 +31,7 @@ jobs:
                   const repo = "${{ github.repository }}"
                   baseName = repo.split("/").at(-1);
                   return baseName;
-          - name: find uploaded plugin
+          - name: find uploaded plugin7
             id: find_plugin
             uses: actions/github-script@v6
             with:
@@ -48,7 +48,7 @@ jobs:
           - name: find the name of the plugin
             id: find_name
             run: |
-              pluginFile=$(basename ${{ fromJSON(steps.find_plugin.outputs)[0] }})
+              pluginFile=$(basename "${{ fromJSON(steps.find_plugin.outputs)[0] }}")
               echo "pluginFile%.*" >> $GITHUB_OUTPUT
           - name: find the architecture of the plugin
             id: find_arch
