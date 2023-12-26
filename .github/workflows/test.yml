@@ -182,13 +182,13 @@ jobs:
               id: get-certificate
               run: |
                 curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
-                certificate=$(unzip -p ${{ github.workspace }}/plugin.jpl ${{ fromJson(needs.set-up.outputs.pluginName) }}.crt)
+                certificate=$(unzip -p ${{ github.workspace }}/plugin.jpl ${{ needs.set-up.outputs.pluginName }}.crt)
                 echo -n $certificate | base64 >> $GITHUB_OUTPUT
             - name: issuer   check
               id: issuer-check
               uses: fjogeleit/http-request-action@v1
               with:
-                url: 'https://plugins.jami.net/upload/${{ fromJson(needs.set-up.outputs.pluginArch)[0] }}/${{ fromJSON(needs.set-up.outputs.pluginName) }}'
+                url: 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ fromJSON(needs.set-up.outputs.pluginName) }}'
                 method: 'GET'
                 customHeaders: '{"Authorization": "${{ steps.get-certificate.outputs.result }}"}'
             - name: issuer check result
