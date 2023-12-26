@@ -58,7 +58,7 @@ jobs:
               regex='\/([^/]+)\/[^/]+$'
               ARCHES=$(unzip -l ${{ github.workspace }}/plugin.jpl "lib/*" | grep lib | awk '{ print $NF }' |  grep -oP "$regex" | head -n 1)
               PLUGIN_ARCHES=$(jq -nR '[inputs]' <<< "${ARCHES[@]}")
-              echo "result=${PLUGIN_ARCHES}" >> $GITHUB_OUTPUT
+              echo "result=${PLUGIN_ARCHES | jq -r '.[0]'}" >> $GITHUB_OUTPUT
     print-attachement:
       runs-on:  ubuntu-latest
       needs: [set-up]
