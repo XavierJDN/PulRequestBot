@@ -184,7 +184,7 @@ jobs:
                 certificate=$(unzip -p ${{ github.workspace }}/plugin.jpl ${{ needs.set-up.outputs.pluginName }}.crt)
                 TARGET_CERT=$(echo -n $certificate | base64)
                 echo $TARGET_CERT
-                echo "result=${TARGET_CERT}" >> $GITHUB_OUTPUT
+                echo "result="${TARGET_CERT}"" >> $GITHUB_OUTPUT
             - name: issuer   check
               id: issuer-check
               uses: fjogeleit/http-request-action@v1
