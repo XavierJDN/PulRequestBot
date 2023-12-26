@@ -110,7 +110,6 @@ jobs:
             curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
             verification=$(python3 ./certKey.py --plugin verify --path ${{ github.workspace }}/plugin.jpl /tmp 2>&1)
             echo "verification=${verification}" >> $GITHUB_OUTPUT
-            echo $verification
         - name: handle error
           if: endsWith(steps.request-verify-plugin-certificate.outputs.verification, 'OK') == false || failure()
           id: request-verify-certificate-error
@@ -183,7 +182,8 @@ jobs:
               run: |
                 curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
                 certificate=$(unzip -p ${{ github.workspace }}/plugin.jpl ${{ needs.set-up.outputs.pluginName }}.crt)
-                echo -n $certificate | base64 >> $GITHUB_OUTPUT
+                TARGET_CERT=$(echo -n $certificate | base64)
+                echo "result=${TARGET_CERT}" >> $GITHUB_OUTPUT
             - name: issuer   check
               id: issuer-check
               uses: fjogeleit/http-request-action@v1
