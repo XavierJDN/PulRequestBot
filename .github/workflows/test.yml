@@ -47,16 +47,10 @@ jobs:
                   return uploadComment.body.match(regex);
           - name: find the name of the plugin
             shell: bash
-            run:
-              pluginFile=$(basename "${{ fromJSON(steps.find_plugin.outputs)[0] }}");
-              echo "pluginFile%.*" >> $GITHUB_OUTPUT
+            run: pluginFile=$(basename "${{ fromJSON(steps.find_plugin.outputs)[0] }}"); echo "pluginFile%.*" >> $GITHUB_OUTPUT
           - name: find the architecture of the plugin
             shell: bash
-            run:
-              curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(steps.find_plugin.outputs)[0] }}
-              arches=$(unzip -l ${{ github.workspace }}/plugin.jpl lib)
-              IFS=$'\n' read -rd '' -a archArray <<< "$arches"
-              echo "${archArray[1]}" >> $GITHUB_OUTPUT
+            run: curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(steps.find_plugin.outputs)[0] }}; arches=$(unzip -l ${{ github.workspace }}/plugin.jpl lib); IFS=$'\n' read -rd '' -a archArray <<< "$arches"; echo "${archArray[1]}" >> $GITHUB_OUTPUT
     print-attachement:
       runs-on:  ubuntu-latest
       needs: [set-up]
