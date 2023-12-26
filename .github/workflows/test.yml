@@ -11,7 +11,6 @@ jobs:
         runs-on:  ubuntu-latest
         outputs:
           repo: ${{ steps.repo.outputs.result }}
-          plugin: ${{ steps.find_plugin.outputs.result }}
           pluginName: ${{ steps.find_plugin_name.outputs.result }}
           pluginArch: ${{ steps.find_plugin_arch.outputs.result }}
           attachements: ${{ steps.verify_attached_plugin.outputs.result }}
@@ -33,28 +32,15 @@ jobs:
                   const repo = "${{ github.repository }}"
                   baseName = repo.split("/").at(-1);
                   return baseName;
-          - name: find uploaded plugin
-            id: find_plugin
-            uses: actions/github-script@v6
-            with:
-              script: |
-                  const regex = /https?:\/\/.*\.jpl\b/;
-                  const { data: comments } = await github.rest.issues.listComments({
-                      owner: "${{ github.repository_owner}}",
-                      repo: ${{ steps.repo.outputs.result }},
-                      issue_number: ${{ github.event.issue.number }}
-                  });
-                  const uploadComment = comments.find(comment => comment.body.includes('/upload'));
-                  return uploadComment.body.match(regex);
           - name: find the name of the plugin
             id: find_plugin_name
             run: |
-              PLUGIN_FILE=$(basename "${{ fromJSON(steps.find_plugin.outputs.result)[0] }}")
+              PLUGIN_FILE=$(basename "${{ fromJSON(steps.verify_attached_plugin.outputs.result)[0] }}")
               echo "result=${PLUGIN_FILE%.*}" >> $GITHUB_OUTPUT
           - name: find the architecture of the plugin
             id: find_plugin_arch
             run: |
-              curl -o ${{ github.workspace }}/plugin.jpl -L "${{ fromJSON(steps.find_plugin.outputs.result)[0] }}"
+              curl -o ${{ github.workspace }}/plugin.jpl -L "${{ fromJSON(steps.verify_attached_plugin.outputs.result)[0] }}"
               regex='^lib/([^/]+)/'
               ARCHES=$(unzip -l ${{ github.workspace }}/plugin.jpl "lib/*" | grep lib | awk '{ print $NF }' |  grep -oP "$regex" | awk -F'/' '{ print $2 }')
               PLUGIN_ARCHES=$(jq -nR '[inputs]' <<< "${ARCHES[@]}")
@@ -65,10 +51,10 @@ jobs:
       needs: [set-up]
       steps:
         - name: print
-          run: echo ${{ toJSON(needs.set-up.outputs.attachements)[0] }} ${{ toJSON(needs.set-up.outputs.plugin)[0] }} ${{ toJSON(needs.set-up.outputs.pluginName)[0] }} ${{ toJSON(needs.set-up.outputs.pluginArch)[0] }}
+          run: echo ${{ toJSON(needs.set-up.outputs.attachements)[0] }} ${{ toJSON(needs.set-up.outputs.attachements)[0] }} ${{ toJSON(needs.set-up.outputs.pluginName)[0] }} ${{ toJSON(needs.set-up.outputs.pluginArch)[0] }}
     handle-error:
         needs: [set-up]
-        if: needs.set-up.outputs.plugin == 'null'
+        if: needs.set-up.outputs.attachements == 'null'
         runs-on: ubuntu-latest
         permissions:
           issues: write
@@ -176,7 +162,7 @@ jobs:
 
     issuer-verification:
         needs: [set-up]
-        if: needs.set-up.outputs.plugin != 'null'
+        if: needs.set-up.outputs.attachements != 'null'
         runs-on: ubuntu-latest
         permissions:
           issues: write
@@ -195,7 +181,7 @@ jobs:
             - name: Get the plugin certificate
               id: get-certificate
               run: |
-                curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
+                curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
                 certificate=$(unzip -p ${{ github.workspace }}/plugin.jpl ${{ fromJson(needs.set-up.outputs.pluginName) }}.crt)
                 echo -n $certificate | base64 >> $GITHUB_OUTPUT
             - name: issuer   check
