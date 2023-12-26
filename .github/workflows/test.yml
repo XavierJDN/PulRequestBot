@@ -46,8 +46,14 @@ jobs:
                   const uploadComment = comments.find(comment => comment.body.includes('/upload'));
                   return uploadComment.body.match(regex);
           - name: find the name of the plugin
-            shell: bash
-            run: pluginFile=$(basename "${{ fromJSON(steps.find_plugin.outputs)[0] }}"); echo "pluginFile%.*" >> $GITHUB_OUTPUT
+            id: find_plugin_name
+            uses: actions/github-script@v6
+            with:
+              script: |
+                  const file = "${{ fromJSON(steps.find_plugin.outputs)[0] }}";
+                  const regex = /(.+)\.jpl$/;
+                  const pluginName = file.match(regex);
+                  return pluginName;
           - name: find the architecture of the plugin
             shell: bash
             run: curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(steps.find_plugin.outputs)[0] }}; arches=$(unzip -l ${{ github.workspace }}/plugin.jpl lib); IFS=$'\n' read -rd '' -a archArray <<< "$arches"; echo "${archArray[1]}" >> $GITHUB_OUTPUT
