@@ -50,7 +50,7 @@ jobs:
             id: find_plugin_name
             run: |
               pluginFile=$(basename "${{ fromJSON(steps.find_plugin.outputs.result)[0] }}")
-              echo "${pluginFile%.*}" >> $GITHUB_OUTPUT
+              echo ${pluginFile%.*} >> $GITHUB_OUTPUT
           - name: find the architecture of the plugin
             id: find_plugin_arch
             run: |
