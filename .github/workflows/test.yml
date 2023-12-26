@@ -3,6 +3,8 @@ run-name: New Upload request from ${{ github.actor }}
 on:
   issue_comment:
     types: [edited, created]
+env:
+  ACTIONS_STEP_DEBUG: true
 jobs:
     set-up:
         if: contains(github.event.issue.labels.*.name, 'new upload request') && startsWith(github.event.comment.body, '/upload')
@@ -55,6 +57,7 @@ jobs:
               curl -o ${{ github.workspace }}/plugin.jpl -L "${{ fromJSON(steps.find_plugin.outputs.result)[0] }}"
               ARCHES=$(unzip -l ${{ github.workspace }}/plugin.jpl "lib/*" | grep lib | awk '{ print $NF }')
               PLUGIN_ARCHES=$(jq -nR '[inputs]' <<< "${ARCHES[@]}")
+              echo "result=${PLUGIN_ARCHES}"
               echo "result=${PLUGIN_ARCHES}" >> $GITHUB_OUTPUT
     print-attachement:
       runs-on:  ubuntu-latest
