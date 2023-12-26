@@ -4,7 +4,7 @@ on:
   issue_comment:
     types: [edited, created]
 env:
-  DEBUG_MODE: true
+  ACTIONS_STEP_DEBUG: true
 jobs:
     set-up:
         if: contains(github.event.issue.labels.*.name, 'new upload request') && startsWith(github.event.comment.body, '/upload')
