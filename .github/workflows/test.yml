@@ -13,7 +13,7 @@ jobs:
           repo: ${{ steps.repo.outputs.result }}
           plugin: ${{ steps.find_plugin.outputs.result }}
           pluginName: ${{ steps.find_plugin_name.outputs.result }}
-          pluginArch: ${{ steps.find_plugin_arch.outputs.result }}
+          pluginArch: ${{ steps.find_plugin_arch.outputs }}
           attachements: ${{ steps.verify_attached_plugin.outputs.result }}
         steps:
           - name: verify the plugin file is attached
@@ -57,7 +57,7 @@ jobs:
               curl -o ${{ github.workspace }}/plugin.jpl -L "${{ fromJSON(steps.find_plugin.outputs.result)[0] }}"
               ARCHES=$(unzip -l ${{ github.workspace }}/plugin.jpl "lib/*" | grep lib | awk '{ print $NF }')
               PLUGIN_ARCHES=$(jq -nR '[inputs]' <<< "${ARCHES[@]}")
-              echo "{ result: $PLUGIN_ARCHES }" > $GITHUB_OUTPUT
+              echo "$PLUGIN_ARCHES" > $GITHUB_OUTPUT
     print-attachement:
       runs-on:  ubuntu-latest
       needs: [set-up]
