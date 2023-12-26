@@ -45,7 +45,7 @@ jobs:
               ARCHES=$(unzip -l ${{ github.workspace }}/plugin.jpl "lib/*" | grep lib | awk '{ print $NF }' |  grep -oP "$regex" | awk -F'/' '{ print $2 }')
               PLUGIN_ARCHES=$(jq -nR '[inputs]' <<< "${ARCHES[@]}")
               TARGET_ARCH=$(echo "$PLUGIN_ARCHES" | jq -r '.[0]')
-              echo "result=${TARGET_ARCH}" >> $GITHUB_OUTPUT
+              echo "result="${TARGET_ARCH}"" >> $GITHUB_OUTPUT
     print-attachement:
       runs-on:  ubuntu-latest
       needs: [set-up]
@@ -188,7 +188,7 @@ jobs:
               id: issuer-check
               uses: fjogeleit/http-request-action@v1
               with:
-                url: 'https://plugins.jami.net/upload/${{ fromJSON(needs.set-up.outputs.pluginArch)[0] }}/${{ needs.set-up.outputs.pluginName }}'
+                url: 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }}'
                 method: 'GET'
                 customHeaders: '{"Authorization": "${{ steps.get-certificate.outputs.result }}"}'
             - name: issuer check result
