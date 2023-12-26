@@ -188,7 +188,7 @@ jobs:
               id: issuer-check
               uses: fjogeleit/http-request-action@v1
               with:
-                url: 'https://plugins.jami.net/upload/${{ fromJSON(needs.set-up.outputs.pluginArch) }}/${{ fromJSON(needs.set-up.outputs.pluginName) }}'
+                url: 'https://plugins.jami.net/upload/${{ fromJSON(needs.set-up.outputs.pluginArch)[0] }}/${{ needs.set-up.outputs.pluginName }}'
                 method: 'GET'
                 customHeaders: '{"Authorization": "${{ steps.get-certificate.outputs.result }}"}'
             - name: issuer check result
