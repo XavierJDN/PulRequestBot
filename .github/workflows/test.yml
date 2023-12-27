@@ -106,6 +106,16 @@ jobs:
             curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
             verification=$(python3 ./certKey.py --plugin verify --path ${{ github.workspace }}/plugin.jpl /tmp 2>&1)
             echo "verification=${verification}" >> $GITHUB_OUTPUT
+        - name: comment-verification-done
+          uses: actions/github-script@v6
+          with:
+            script: |
+              github.rest.issues.createComment({
+                issue_number: ${{ github.event.issue.number }},
+                owner: "${{ github.repository_owner}}",
+                repo: ${{ needs.set-up.outputs.repo }},
+                body: "the plugin certificate verification end with ${{ steps.request-verify-plugin-certificate.outputs.verification}}. Please wait for the result."
+              })
     issuer-verification:
         needs: [set-up]
         if: needs.set-up.outputs.attachements != 'null'
@@ -139,6 +149,17 @@ jobs:
                 certificate=$(echo -n "${{ steps.get-certificate.outputs.result }}" | tr -d ' ')
                 status=$(curl -o /dev/null -w "%{http_code}" --location https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }} --header "Authorization: $certificate")
                 echo "result=${status}" >> $GITHUB_OUTPUT
+            - name: issuer verification Process
+              id: issuer-verification-done
+              uses: actions/github-script@v6
+              with:
+                script: |
+                    github.rest.issues.createComment({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        body: 'The issuer verification end with ${{ steps.issuer-check.outputs.result}}. Please wait for the result.'
+                    });
     upload-request-result:
         needs: [set-up, issuer-verification, verify-certificate]
         if: needs.set-up.outputs.attachements != 'null'
