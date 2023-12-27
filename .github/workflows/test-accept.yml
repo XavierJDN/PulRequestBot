@@ -2,10 +2,10 @@ name: jami-store-requests-manager-accept
 run-name: Organization decision from ${{ github.actor }}
 on:
   issue_comment:
-    types: [edited]
+    types: [edited, created]
 jobs:
     set-up:
-        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline'))
+        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline')) && github.event.comment.author_association == 'MEMBER'
         runs-on:  ubuntu-latest
         outputs:
             repo: ${{ steps.repo.outputs.result }}
@@ -90,7 +90,6 @@ jobs:
                     repo: ${{ needs.set-up.outputs.repo }},
                     labels: ['accepted request', 'waiting for upload']
                 });
-                // check if declined request label is present and remove it
                 const declinedRequestLabel = labels.find(label => label.name === 'declined request');
                     if (!declinedRequestLabel){
                       return;
