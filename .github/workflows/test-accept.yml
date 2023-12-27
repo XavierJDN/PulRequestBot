@@ -1,18 +1,15 @@
 name: jami-store-requests-manager-accept
-run-name: New Upload request from ${{ github.actor }}
+run-name: Organization decision from ${{ github.actor }}
 on:
   issue_comment:
-    types: [edited, created]
+    types: [edited]
 jobs:
     set-up:
-         # if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline')) && github.event.comment.author_association == 'MEMBER'
-        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline'))
+        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline')) && github.event.comment.author_association == 'MEMBER'
         runs-on:  ubuntu-latest
         outputs:
             repo: ${{ steps.repo.outputs.result }}
             plugin: ${{ steps.find-plugin.outputs.result }}
-            pluginName: ${{ steps.find-plugin-name.outputs.result }}
-            pluginArch: ${{ steps.find-plugin-arch.outputs.result }}
         steps:
             - name: get-repo-base-name
               id: repo
@@ -36,24 +33,10 @@ jobs:
                     });
                     const uploadComment = comments.find(comment => comment.body.includes('/upload'));
                     return uploadComment === undefined ? null: uploadComment.body.match(regex);
-            - name: find the name of the plugin
-              id: find-plugin-name
-              run: |
-                echo "$( $(basename ${{ fromJSON(steps.find-plugin.outputs)[0] }})%.* )" >> $GITHUB_OUTPUT
-            - name: find the architecture of the plugin
-              id: find-plugin-arch
-              run: |
-                curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(steps.find-plugin.outputs)[0] }}
-                arches=$(unzip -l ${{ github.workspace }}/plugin.jpl lib)
-                IFS=$'\n' read -rd '' -a archArray <<< "$arches"
-                echo "${archArray[1]}" >> $GITHUB_OUTPUT
-
     handle-error:
         needs: [set-up]
         if: needs.set-up.outputs.plugin == 'null'
         runs-on: ubuntu-latest
-        permissions:
-          issues: write
         steps:
             - name: handle error
               id: handle-error
@@ -66,145 +49,63 @@ jobs:
                         repo: ${{ needs.set-up.outputs.repo }},
                         body: '${{ github.actor}}, Please wait the organization to upload the plugin.'
                     });
-    issuer-verification:
-        needs: [set-up]
-        if: needs.set-up.outputs.plugin != 'null' && github.event.comment.author_association != 'MEMBER'
-        runs-on: ubuntu-latest
-        permissions:
-          issues: write
-        steps:
-            - name: issuer verification Process
-              id: issuer-verification
-              uses: actions/github-script@v6
-              with:
-                script: |
-                    github.rest.issues.createComment({
-                        issue_number: ${{ github.event.issue.number }},
-                        owner: "${{ github.repository_owner}}",
-                        repo: ${{ needs.set-up.outputs.repo }},
-                        body: 'A issuer verification is currently in progress. Please wait for the result.'
-                    });
-            - name: Get the plugin certificate
-              id: get-certificate
-              run: |
-                curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
-                certificate=$(unzip -p ${{ github.workspace }}/plugin.jpl ${{ fromJson(needs.set-up.outputs.pluginName) }}.crt)
-                echo -n $certificate | base64 >> $GITHUB_OUTPUT
-            - name: issuer   check
-              id: issuer-check
-              uses: fjogeleit/http-request-action@v1
-              with:
-                url: 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ fromJSON(needs.set-up.outputs.pluginName) }}'
-                method: 'GET'
-                customHeaders: '{"Authorization": "${{ steps.get-certificate.outputs.result }}"}'
-            - name: issuer check result
-              id: issuer-check-result
-              run: |
-                echo "${{ steps.issuer-check.outputs.response }}" >> $GITHUB_OUTPUT
-            - name: decline request
-              if: fromJson(steps.issuer-check-result.outputs.result).status == '403'
-              id: decline-request
-              uses: actions/github-script@v6
-              with:
-                script: |
-                    github.rest.issues.createComment({
-                        issue_number: ${{ github.event.issue.number }},
-                        owner: "${{ github.repository_owner}}",
-                        repo: ${{ needs.set-up.outputs.repo }},
-                        body: 'The issuer verification failed. Please change your plugin and request again.'
-                    });
-                    github.rest.issues.addLabels({
-                        issue_number: ${{ github.event.issue.number }},
-                        owner: "${{ github.repository_owner}}",
-                        repo: ${{ needs.set-up.outputs.repo }},
-                        labels: ['declined request']
-                    });
-            - name: accept request
-              if: fromJson(steps.issuer-check-result.outputs.result).status == '200'
-              id: accept-request
-              uses: actions/github-script@v6
-              with:
-                script: |
-                    github.rest.issues.createComment({
-                        issue_number: ${{ github.event.issue.number }},
-                        owner: "${{ github.repository_owner}}",
-                        repo: ${{ needs.set-up.outputs.repo }},
-                        body: 'The issuer verification was successful. Please wait for the plugin to be uploaded.'
-                    });
-                    github.rest.issues.addLabels({
-                        issue_number: ${{ github.event.issue.number }},
-                        owner: "${{ github.repository_owner}}",
-                        repo: ${{ needs.set-up.outputs.repo }},
-                        labels: ['accepted request', 'waiting for upload']
-                    });
-                    github.rest.issues.removeLabel({
-                        issue_number: ${{ github.event.issue.number }},
-                        owner: "${{ github.repository_owner}}",
-                        repo: ${{ needs.set-up.outputs.repo }},
-                        name: 'declined request'
-                    });
     decline:
       needs: [set-up]
       name: Decline request
       if: startsWith(github.event.comment.body, '/decline')
       runs-on: ubuntu-latest
-      permissions:
-        issues: write
       steps:
           - name: Decline request
             id: decline-request
-            uses: actions/github-script@v6
-            with:
-              script: |
+            run: |
+              github.rest.issues.createComment({
+                  issue_number: ${{ github.event.issue.number }},
+                  owner: "${{ github.repository_owner}}",
+                  repo: ${{ github.repository }},
+                  body: 'The request was declined. Please change your plugin and request again.'
+              });
+              github.rest.issues.addLabels({
+                  issue_number: ${{ github.event.issue.number }},
+                  owner: "${{ github.repository_owner}}",
+                  repo: ${{ github.repository }},
+                  labels: ['declined request']
+              });
+    accept-request:
+        needs: [set-up]
+        if: startsWith(github.event.comment.body, '/accept') && needs.set-up.outputs.plugin != 'null'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Accept request
+              id: accept-request
+              run: |
                 github.rest.issues.createComment({
                     issue_number: ${{ github.event.issue.number }},
                     owner: "${{ github.repository_owner}}",
                     repo: ${{ needs.set-up.outputs.repo }},
-                    body: 'The request was declined. Please change your plugin and request again.'
+                    body: 'The request was accepted. Please wait for the plugin to be uploaded.'
                 });
                 github.rest.issues.addLabels({
                     issue_number: ${{ github.event.issue.number }},
                     owner: "${{ github.repository_owner}}",
                     repo: ${{ needs.set-up.outputs.repo }},
-                    labels: ['declined request']
+                    labels: ['accepted request', 'waiting for upload']
                 });
-    accept-request:
-        needs: [set-up]
-        if: startsWith(github.event.comment.body, '/accept') && needs.set-up.outputs.plugin != 'null'
-        runs-on: ubuntu-latest
-        permissions:
-          issues: write
-        steps:
-            - name: Accept request
-              id: accept-request
-              uses: actions/github-script@v6
-              with:
-                script: |
-                  github.rest.issues.createComment({
-                      issue_number: ${{ github.event.issue.number }},
-                      owner: "${{ github.repository_owner}}",
-                      repo: ${{ needs.set-up.outputs.repo }},
-                      body: 'The request was accepted. Please wait for the plugin to be uploaded.'
-                  });
-                  github.rest.issues.addLabels({
-                      issue_number: ${{ github.event.issue.number }},
-                      owner: "${{ github.repository_owner}}",
-                      repo: ${{ needs.set-up.outputs.repo }},
-                      labels: ['accepted request', 'waiting for upload']
-                  });
-                  github.rest.issues.removeLabel({
-                      issue_number: ${{ github.event.issue.number }},
-                      owner: "${{ github.repository_owner}}",
-                      repo: ${{ needs.set-up.outputs.repo }},
-                      name: 'declined request'
-                  });
+                // check if declined request label is present and remove it
+                const declinedRequestLabel = labels.find(label => label.name === 'declined request');
+                    if (!declinedRequestLabel){
+                      return;
+                    }
+                github.rest.issues.removeLabel({
+                    issue_number: ${{ github.event.issue.number }},
+                    owner: "${{ github.repository_owner}}",
+                    repo: ${{ needs.set-up.outputs.repo }},
+                    name: 'declined request'
+                });
             - name: Set up SSH connection
               uses: webfactory/ssh-agent@v0.5.0
               with:
                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             - name: Upload plugin
               run: |
-                export VERSION=date +%Y%m%d%H%M%S
-                export BRANCH_VERSION=date +%Y%m%d
                 curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
                 ssh -T user@remote
