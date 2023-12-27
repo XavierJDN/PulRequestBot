@@ -5,8 +5,7 @@ on:
     types: [edited, created]
 jobs:
     set-up:
-        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline')) && github.event.comment.author_association == 'MEMBER'
-        runs-on:  ubuntu-latest
+        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline'))
         outputs:
             repo: ${{ steps.repo.outputs.result }}
             plugin: ${{ steps.find-plugin.outputs.result }}
