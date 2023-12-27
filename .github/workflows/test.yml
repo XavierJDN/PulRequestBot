@@ -186,17 +186,12 @@ jobs:
                 echo "result="${TARGET_CERT}"" >> $GITHUB_OUTPUT
             - name: issuer   check
               id: issuer-check
-              uses: fjogeleit/http-request-action@v1
-              with:
-                url: 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }}'
-                method: 'GET'
-                customHeaders: '{"Authorization": "${{ steps.get-certificate.outputs.result }}"}'
-            - name: issuer check result
-              id: issuer-check-result
               run: |
-                echo "${{ steps.issuer-check.outputs.response }}" >> $GITHUB_OUTPUT
+                status=$(curl -o /dev/null -w "%{http_code}" --location 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }}' \
+                --header 'Authorization: ${{ steps.get-certificate.outputs.result}}')
+                echo "result=${status}" >> $GITHUB_OUTPUT
             - name: decline request
-              if: fromJson(steps.issuer-check-result.outputs.result).status == '403'
+              if: fromJson(steps.issuer-check.outputs.result).status == '403'
               id: decline-request
               uses: actions/github-script@v6
               with:
@@ -214,7 +209,7 @@ jobs:
                         labels: ['declined request']
                     });
             - name: accept request
-              if: fromJson(steps.issuer-check-result.outputs.result).status == '200'
+              if: fromJson(steps.issuer-check.outputs.result).status == '200'
               id: accept-request
               uses: actions/github-script@v6
               with:
