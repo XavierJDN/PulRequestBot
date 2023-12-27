@@ -188,9 +188,13 @@ jobs:
               id: issuer-check
               run: |
                 certificate=$(echo -n "${{ steps.get-certificate.outputs.result }}" | tr -d ' ')
-                curl --anyauth --location https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }} --header "Authorization: $certificate"
-                status=$(curl --anyauth -o /dev/null -w "%{http_code}" --location https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }} --header "Authorization: $certificate")
-                echo $status
+                curl -v --anyauth --location https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }} --header "Authorization: $certificate"
+                retry_count=0
+                while [[$status -ne 500 && $retry_count -lt 2]]; do
+                  status=$(curl -v --anyauth -o /dev/null -w "%{http_code}" --location https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }} --header "Authorization: $certificate")
+                  retry_count=$((retry_count+1))
+                  echo $status
+                done
                 echo "result=${status}" >> $GITHUB_OUTPUT
             - name: decline request
               if: fromJson(steps.issuer-check.outputs.result) == '403'
