@@ -98,7 +98,7 @@ jobs:
                       repo: ${{ needs.set-up.outputs.repo }},
                       labels: ['accepted request', 'waiting for upload']
                   });
-                  const labels = github.rest.issues.listLabelsOnIssue({
+                  const labels = await github.rest.issues.listLabelsOnIssue({
                         issue_number: ${{ github.event.issue.number }},
                         owner: "${{ github.repository_owner}}",
                         repo: ${{ needs.set-up.outputs.repo }},
