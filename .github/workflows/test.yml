@@ -75,6 +75,8 @@ jobs:
       runs-on:  ubuntu-latest
       permissions:
         issues: write
+      outputs:
+        result: ${{ steps.request-verify-plugin-certificate.outputs.verification }}
       needs: [set-up]
       steps:
         - name: comment-verification-in-progress
@@ -165,6 +167,8 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
           issues: write
+        outputs:
+          result: ${{ steps.issuer-check.outputs.result }}
         steps:
             - name: issuer verification Process
               id: issuer-verification
@@ -192,8 +196,25 @@ jobs:
                 status=$(curl -v -o /dev/null -w "%{http_code}" --location https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }} --header "Authorization: $certificate")
                 echo $status
                 echo "result=${status}" >> $GITHUB_OUTPUT
+    upload-request-result:
+        needs: [set-up, issuer-verification, verify-certificate]
+        if: needs.set-up.outputs.attachements != 'null'
+        runs-on: ubuntu-latest
+        steps:
+            - name: handle failure
+              if: failure()
+              id: handle-failure
+              uses: actions/github-script@v6
+              with:
+                script: |
+                    github.rest.issues.createComment({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        body: 'We have some internal error. Please retry and contact the organization.'
+                    });
             - name: decline request
-              if: fromJson(steps.issuer-check.outputs.result) == '403'
+              if: fromJson(needs.issuer-verification.outputs.result) == '403' || endsWith(needs.verify-certificate.outputs.result, 'OK') == false
               id: decline-request
               uses: actions/github-script@v6
               with:
@@ -202,7 +223,7 @@ jobs:
                         issue_number: ${{ github.event.issue.number }},
                         owner: "${{ github.repository_owner}}",
                         repo: ${{ needs.set-up.outputs.repo }},
-                        body: 'The issuer verification failed. Please change your plugin and request again.'
+                        body: 'Please change your plugin and request again. If you want more details, please contact the organization.'
                     });
                     github.rest.issues.addLabels({
                         issue_number: ${{ github.event.issue.number }},
@@ -211,7 +232,7 @@ jobs:
                         labels: ['declined request']
                     });
             - name: accept request
-              if: fromJson(steps.issuer-check.outputs.result) == '200'
+              if: fromJson(needs.issuer-verification.outputs.result) == '200'
               id: accept-request
               uses: actions/github-script@v6
               with:
@@ -220,7 +241,7 @@ jobs:
                         issue_number: ${{ github.event.issue.number }},
                         owner: "${{ github.repository_owner}}",
                         repo: ${{ needs.set-up.outputs.repo }},
-                        body: 'The issuer verification was successful. Please wait for the plugin to be accept.'
+                        body: 'Please wait for the plugin to be upload.'
                     });
                     github.rest.issues.addLabels({
                         issue_number: ${{ github.event.issue.number }},
