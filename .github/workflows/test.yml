@@ -3,6 +3,8 @@ run-name: New Upload request from ${{ github.actor }}
 on:
   issue_comment:
     types: [edited, created]
+  label:
+    types: [created, deleted]
 jobs:
     set-up:
         if: contains(github.event.issue.labels.*.name, 'new upload request') && startsWith(github.event.comment.body, '/upload')
@@ -205,4 +207,10 @@ jobs:
                         owner: "${{ github.repository_owner}}",
                         repo: ${{ needs.set-up.outputs.repo }},
                         name: 'invalid plugin'
+                    });
+                    github.rest.issues.removeLabel({
+                        issue_number: ${{ github.event.issue.number }},
+                        owner: "${{ github.repository_owner}}",
+                        repo: ${{ needs.set-up.outputs.repo }},
+                        name: 'plugin certificate verification in progress'
                     });
