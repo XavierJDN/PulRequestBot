@@ -71,7 +71,7 @@ jobs:
                 github.rest.issues.addLabels({
                     issue_number: ${{ github.event.issue.number }},
                     owner: "${{ github.repository_owner}}",
-                    repo: ${{ github.repository }},
+                    repo: ${{ needs.set-up.outputs.repo }},
                     labels: ['declined request']
                 });
     accept-request:
