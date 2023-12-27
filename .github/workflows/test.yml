@@ -11,6 +11,7 @@ jobs:
             repo: ${{ steps.repo.outputs.result }}
             plugin: ${{ steps.find-plugin.outputs.result }}
             pluginName: ${{ steps.find_plugin_name.outputs.result }}
+            pluginPlatform: ${{ steps.find-plugin-platform.outputs.result }}
         steps:
             - name: get-repo-base-name
               id: repo
@@ -39,14 +40,14 @@ jobs:
               run: |
                 PLUGIN_FILE=$(basename "${{ fromJSON(steps.find-plugin.outputs.result)[0] }}")
                 echo "result=${PLUGIN_FILE%.*}" >> $GITHUB_OUTPUT
-            - name: find the architecture of the plugin
-              id: find-plugin-arch
+            - name: find the platform of the plugin
+              id: find-plugin-platform
               run: |
                 curl -o ${{ github.workspace }}/plugin.jpl -L "${{ fromJSON(steps.find-plugin.outputs.result)[0] }}"
                 regex='^lib/([^/]+)/'
                 ARCHES=$(unzip -l ${{ github.workspace }}/plugin.jpl "lib/*" | grep lib | awk '{ print $NF }' |  grep -oP "$regex" | awk -F'/' '{ print $2 }')
                 PLUGIN_ARCHES=$(jq -nR '[inputs]' <<< "${ARCHES[@]}")
-                if [[ $PLUGIN_ARCHES == *"windows"* || $PLUGIN_ARCHES == *"macos"* || $PLUGIN_ARCHES == *"linux"* ]]; then
+                if [[ $PLUGIN_ARCHES == *"windows"* || $PLUGIN_ARCHES == *"apple"* || $PLUGIN_ARCHES == *"linux"* ]]; then
                     TARGET_ARCH="desktop"
                 else
                     TARGET_ARCH="android"
@@ -135,9 +136,13 @@ jobs:
                       name: 'declined request'
                   });
             - name: Set up SSH connection
+              id: ssh-agent
               uses: webfactory/ssh-agent@v0.5.0
               with:
                 ssh-private-key: ${{ secrets.SSH_CREDENTIALS }}
             - name: Upload plugin
               run: |
                 curl -o ${{ github.workspace }}/${{ needs.set-up.outputs.pluginName }}.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
+                HOST_NAME=$(ssh-add -l -E md5 | awk '{print $3}')
+                echo $HOST_NAME
+                # rsync --verbose ${{ github.workspace }}/${{ needs.set-up.outputs.pluginName }}.jpl $HOST_NAME:${{ secrets.REMOTE_PATH }}/${{ needs.set-up.outputs.pluginName }}/${{needs.set-up.outputs.pluginPlatform}}/${{ needs.set-up.outputs.pluginName }}.jpl
