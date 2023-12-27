@@ -103,8 +103,7 @@ jobs:
                         owner: "${{ github.repository_owner}}",
                         repo: ${{ needs.set-up.outputs.repo }},
                     });
-                  console.log(labels);
-                  const declinedRequestLabel = labels.find(label => label.name === 'declined request');
+                  const declinedRequestLabel = labels.data.find(label => label.name === 'declined request');
                       if (!declinedRequestLabel){
                         return;
                       }
