@@ -143,6 +143,8 @@ jobs:
         needs: [set-up, issuer-verification, verify-certificate]
         if: needs.set-up.outputs.attachements != 'null'
         runs-on: ubuntu-latest
+        permissions:
+          issues: write
         steps:
             - name: handle failure
               if: failure()
@@ -175,7 +177,7 @@ jobs:
                         labels: ['invalid plugin']
                     });
             - name: accept request
-              if: fromJson(needs.issuer-verification.outputs.result) == '200'
+              if: fromJson(needs.issuer-verification.outputs.result) == '200' && endsWith(needs.verify-certificate.outputs.result, 'OK') == true
               id: accept-request
               uses: actions/github-script@v6
               with:
@@ -192,7 +194,6 @@ jobs:
                         repo: ${{ needs.set-up.outputs.repo }},
                         labels: ['wait to be accept', 'valid plugin']
                     });
-                    // check if invalid plugin label is present
                     const labels = github.rest.issues.listLabelsOnIssue({
                         issue_number: ${{ github.event.issue.number }},
                         owner: "${{ github.repository_owner}}",
