@@ -5,7 +5,7 @@ on:
     types: [edited, created]
 jobs:
     set-up:
-        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline'))
+        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline')) && github.event.comment.author_association == 'MEMBER'
         runs-on:  ubuntu-latest
         outputs:
             repo: ${{ steps.repo.outputs.result }}
@@ -53,6 +53,8 @@ jobs:
       needs: [set-up]
       name: Decline request
       if: startsWith(github.event.comment.body, '/decline')
+      permissions:
+        issues: write
       runs-on: ubuntu-latest
       steps:
           - name: Decline request
@@ -76,6 +78,8 @@ jobs:
         needs: [set-up]
         if: startsWith(github.event.comment.body, '/accept') && needs.set-up.outputs.plugin != 'null'
         runs-on: ubuntu-latest
+        permissions:
+          issues: write
         steps:
             - name: Accept request
               id: accept-request
