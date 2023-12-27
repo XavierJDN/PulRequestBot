@@ -5,7 +5,7 @@ on:
     types: [edited, created]
 jobs:
     set-up:
-        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline'))
+        if: contains(github.event.issue.labels.*.name, 'new upload request') && (startsWith(github.event.comment.body, '/accept') || startsWith(github.event.comment.body, '/decline')) && github.event.comment.author_association == 'MEMBER'
         runs-on:  ubuntu-latest
         outputs:
             repo: ${{ steps.repo.outputs.result }}
@@ -39,7 +39,6 @@ jobs:
               run: |
                 PLUGIN_FILE=$(basename "${{ fromJSON(steps.find-plugin.outputs.result)[0] }}")
                 echo "result=${PLUGIN_FILE%.*}" >> $GITHUB_OUTPUT
-                - name: find the architecture of the plugin
             - name: find the architecture of the plugin
               id: find-plugin-arch
               run: |
