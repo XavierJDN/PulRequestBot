@@ -187,9 +187,7 @@ jobs:
             - name: issuer   check
               id: issuer-check
               run: |
-                status=$(curl -o /dev/null -w "%{http_code}" --location 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }}' \
-                --header 'Authorization: ${{ steps.get-certificate.outputs.result}}')
-                echo $status
+                status=$(curl -o /dev/null -w "%{http_code}" --location 'https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }}' --header 'Authorization: ${{ steps.get-certificate.outputs.result}}')
                 echo "result=${status}" >> $GITHUB_OUTPUT
             - name: decline request
               if: fromJson(steps.issuer-check.outputs.result) == '403'
