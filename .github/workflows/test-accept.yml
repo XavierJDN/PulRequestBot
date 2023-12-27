@@ -10,6 +10,7 @@ jobs:
         outputs:
             repo: ${{ steps.repo.outputs.result }}
             plugin: ${{ steps.find-plugin.outputs.result }}
+            pluginName: ${{ steps.find_plugin_name.outputs.result }}
         steps:
             - name: get-repo-base-name
               id: repo
@@ -33,6 +34,11 @@ jobs:
                     });
                     const uploadComment = comments.find(comment => comment.body.includes('/upload'));
                     return uploadComment === undefined ? null: uploadComment.body.match(regex);
+            - name: find the name of the plugin
+              id: find_plugin_name
+              run: |
+                PLUGIN_FILE=$(basename "${{ fromJSON(steps.find-plugin.outputs.result)[0] }}")
+                echo "result=${PLUGIN_FILE%.*}" >> $GITHUB_OUTPUT
     handle-error:
         needs: [set-up]
         if: needs.set-up.outputs.plugin == 'null'
@@ -103,6 +109,7 @@ jobs:
                         owner: "${{ github.repository_owner}}",
                         repo: ${{ needs.set-up.outputs.repo }},
                     });
+                  console.log(labels);
                   const declinedRequestLabel = labels.data.find(label => label.name === 'declined request');
                       if (!declinedRequestLabel){
                         return;
@@ -116,8 +123,7 @@ jobs:
             - name: Set up SSH connection
               uses: webfactory/ssh-agent@v0.5.0
               with:
-                ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+                ssh-private-key: ${{ secrets.SSH_CREDENTIALS }}
             - name: Upload plugin
               run: |
-                curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
-                ssh -T user@remote
+                curl -o ${{ github.workspace }}/${{ needs.set-up.outputs.pluginName }}.jpl -L ${{ fromJSON(needs.set-up.outputs.plugin)[0] }}
