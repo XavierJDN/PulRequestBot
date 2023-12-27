@@ -182,9 +182,10 @@ jobs:
               run: |
                 curl -o ${{ github.workspace }}/plugin.jpl -L ${{ fromJSON(needs.set-up.outputs.attachements)[0] }}
                 certificate=$(unzip -p ${{ github.workspace }}/plugin.jpl ${{ needs.set-up.outputs.pluginName }}.crt)
+                echo $certificate
                 TARGET_CERT=$(printf "%s" $certificate | base64)
                 echo "result="${TARGET_CERT}"" >> $GITHUB_OUTPUT
-            - name: issuer   check
+            - name: issuer check
               id: issuer-check
               run: |
                 certificate=$(echo -n "${{ steps.get-certificate.outputs.result }}" | tr -d ' ')
