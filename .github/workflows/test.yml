@@ -187,7 +187,7 @@ jobs:
             - name: issuer   check
               id: issuer-check
               run: |
-                certificate=$(echo "${{ steps.get-certificate.outputs.result }}" | tr -d ' ')
+                certificate=$(echo -n "${{ steps.get-certificate.outputs.result }}" | tr -d ' ')
                 curl -v --location https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }} --header "Authorization: $certificate"
                 status=$(curl -o /dev/null -w "%{http_code}" --location https://plugins.jami.net/upload/${{ needs.set-up.outputs.pluginArch }}/${{ needs.set-up.outputs.pluginName }} --header "Authorization: $certificate")
                 echo $status
